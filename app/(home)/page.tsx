@@ -1,6 +1,6 @@
 import EditorPreview from "../components/ui/editor-preview";
 import Hero from "../components/ui/hero";
-import RecordingSteps from "../components/ui/RecordingSteps";
+import InteractiveRecordingSteps from "../components/ui/recordingSteps";
 export default function Home() {
   return (
     <div className="flex flex-col">
@@ -15,7 +15,7 @@ export default function Home() {
 
       <section className="w-full py-16">
         <div className="max-w-6xl mx-auto px-6">
-          <RecordingSteps />
+          <InteractiveRecordingSteps />
         </div>
       </section>
     </div>

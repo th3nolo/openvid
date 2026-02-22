@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { SliderControl } from "@/app/components/ui/slider-control";
 import { SidebarTool } from "@/app/components/ui/sidebar-tool";
 import { TabButton } from "@/app/components/ui/tab-button";
 import { WallpaperGrid } from "@/app/components/ui/wallpaper-grid";
-
+import { loadVideoFromIndexedDB } from "@/hooks/useScreenRecording";
+import Image from "next/image";
 import "../../globals.css";
+import { ExportDropdown } from "@/app/components/ui/exportDropdown";
+import { AspectRatioSelect } from "@/app/components/ui/aspectRatioSelect";
 
-type Tool = "screenshot" | "cursor" | "record" | "text" | "audio" | "settings";
+type Tool = "screenshot" | "text" | "audio" | "zoom";
 type BackgroundTab = "wallpaper" | "image" | "gradient" | "color";
 
 export default function Editor() {
@@ -22,31 +25,94 @@ export default function Editor() {
     const [roundedCorners, setRoundedCorners] = useState(40);
     const [shadows, setShadows] = useState(25);
 
+    // Video state
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [videoDuration, setVideoDuration] = useState<number>(0);
+    const [currentTime, setCurrentTime] = useState<number>(0);
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    // Load video from IndexedDB
+    useEffect(() => {
+        const loadVideo = async () => {
+            try {
+                const videoData = await loadVideoFromIndexedDB();
+                if (videoData) {
+                    setVideoUrl(videoData.url);
+                    setVideoDuration(videoData.duration);
+                }
+            } catch (error) {
+                console.error("Error loading video:", error);
+            }
+        };
+
+        loadVideo();
+    }, []);
+
+    // Video playback controls
+    const togglePlayPause = () => {
+        if (videoRef.current) {
+            if (isPlaying) {
+                videoRef.current.pause();
+            } else {
+                videoRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    const handleTimeUpdate = () => {
+        if (videoRef.current) {
+            setCurrentTime(videoRef.current.currentTime);
+        }
+    };
+
+    const handleLoadedMetadata = () => {
+        if (videoRef.current) {
+            setVideoDuration(videoRef.current.duration);
+        }
+    };
+
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (videoRef.current && videoDuration > 0) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            videoRef.current.currentTime = pos * videoDuration;
+        }
+    };
+
+    const formatTime = (time: number) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    const skipBackward = () => {
+        if (videoRef.current) {
+            videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 5);
+        }
+    };
+
+    const skipForward = () => {
+        if (videoRef.current) {
+            videoRef.current.currentTime = Math.min(videoDuration, videoRef.current.currentTime + 5);
+        }
+    };
+
     return (
         <div className="flex flex-col h-screen w-full bg-[#0E0E12] text-[#A1A1AA] font-sans overflow-hidden select-none">
-
-            {/* --- TOP / MIDDLE SECTION --- */}
             <div className="flex flex-1 overflow-hidden">
-
-                {/* 1. Sidebar Tools (Left-most) */}
-                <div className="w-[60px] flex flex-col items-center py-4 bg-[#141417] border-r border-white/5 gap-6">
+                <div className="w-15 flex flex-col items-center py-4 bg-[#141417] border-r border-white/5 gap-6">
+                    <div className="mb-2">
+                        <Image src="/svg/logo-freeshot.svg" alt="Logo" width={40} height={40} />
+                    </div>
                     <SidebarTool
                         icon="mdi:monitor-screenshot"
                         isActive={activeTool === "screenshot"}
                         onClick={() => setActiveTool("screenshot")}
                     />
                     <SidebarTool
-                        icon="mdi:cursor-default"
-                        isActive={activeTool === "cursor"}
-                        onClick={() => setActiveTool("cursor")}
-                    />
-                    <SidebarTool
-                        icon="mdi:record-circle-outline"
-                        isActive={activeTool === "record"}
-                        onClick={() => setActiveTool("record")}
-                    />
-                    <SidebarTool
-                        icon="mdi:message-text-outline"
+                        icon="iconoir:text-size"
                         isActive={activeTool === "text"}
                         onClick={() => setActiveTool("text")}
                     />
@@ -55,16 +121,18 @@ export default function Editor() {
                         isActive={activeTool === "audio"}
                         onClick={() => setActiveTool("audio")}
                     />
+                    <SidebarTool
+                        icon="iconamoon:zoom-in-bold"
+                        isActive={activeTool === "zoom"}
+                        onClick={() => setActiveTool("zoom")}
+                    />
                     <div className="mt-auto">
                         <SidebarTool
-                            icon="mdi:cog-outline"
-                            isActive={activeTool === "settings"}
-                            onClick={() => setActiveTool("settings")}
+                            icon="lucide:sidebar-close"
                         />
                     </div>
                 </div>
 
-                {/* 2. Properties Panel (Left Sidebar) */}
                 <div className="w-[320px] bg-[#141417] border-r border-white/5 flex flex-col overflow-y-auto custom-scrollbar">
 
                     {activeTool === "screenshot" && (
@@ -75,20 +143,19 @@ export default function Editor() {
                                     <span>Background</span>
                                 </div>
 
-                                {/* Tabs */}
                                 <div className="flex bg-[#09090B] rounded-lg p-1 text-xs font-medium">
                                     <TabButton
-                                        label="Wallpaper"
+                                        label="Fondos"
                                         isActive={backgroundTab === "wallpaper"}
                                         onClick={() => setBackgroundTab("wallpaper")}
                                     />
                                     <TabButton
-                                        label="Image"
+                                        label="Imagen"
                                         isActive={backgroundTab === "image"}
                                         onClick={() => setBackgroundTab("image")}
                                     />
                                     <TabButton
-                                        label="Gradient"
+                                        label="Gradiente"
                                         isActive={backgroundTab === "gradient"}
                                         onClick={() => setBackgroundTab("gradient")}
                                     />
@@ -100,60 +167,19 @@ export default function Editor() {
                                 </div>
                             </div>
 
-                            <div className="p-4 flex flex-col gap-6">
+                            <div className="p-4 flex flex-col gap-6 pb-12">
                                 {/* Wallpaper Section */}
                                 {backgroundTab === "wallpaper" && (
-                                    <div className="flex flex-col gap-6">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <Icon icon="mdi:monitor" width="16" />
-                                                <span className="text-sm text-white">Wallpaper</span>
-                                            </div>
-                                            <div className="flex gap-2 mb-4 text-xs">
-                                                <button className="px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/5">
-                                                    Canvid
-                                                </button>
-                                                <button className="px-3 py-1.5 rounded-full bg-white/10 text-white">
-                                                    Windows and macOS
-                                                </button>
-                                            </div>
-
-                                            {/* Wallpapers Grid */}
-                                            <WallpaperGrid
-                                                selectedIndex={selectedWallpaper}
-                                                onSelect={setSelectedWallpaper}
-                                            />
-
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Icon icon="mdi:monitor" width="16" />
+                                            <span className="text-sm text-white">Fondos</span>
                                         </div>
-                                        {/* Sliders Section */}
-                                        <div className="flex flex-col gap-5">
-                                            <SliderControl
-                                                icon="mdi:blur"
-                                                label="Background blur"
-                                                value={backgroundBlur}
-                                                onChange={setBackgroundBlur}
-                                            />
 
-                                            <div className="text-sm font-medium text-white mt-2">Shape</div>
-                                            <SliderControl
-                                                icon="mdi:border-outside"
-                                                label="Padding"
-                                                value={padding}
-                                                onChange={setPadding}
-                                            />
-                                            <SliderControl
-                                                icon="mdi:rounded-corner"
-                                                label="Rounded Corners"
-                                                value={roundedCorners}
-                                                onChange={setRoundedCorners}
-                                            />
-                                            <SliderControl
-                                                icon="mdi:weather-sunny"
-                                                label="Shadows"
-                                                value={shadows}
-                                                onChange={setShadows}
-                                            />
-                                        </div>
+                                        <WallpaperGrid
+                                            selectedIndex={selectedWallpaper}
+                                            onSelect={setSelectedWallpaper}
+                                        />
                                     </div>
                                 )}
 
@@ -161,34 +187,67 @@ export default function Editor() {
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
                                             <Icon icon="mdi:image" width="16" />
-                                            <span className="text-sm text-white">Upload Image</span>
+                                            <span className="text-sm text-white">Subir imagen</span>
                                         </div>
                                         <button className="w-full p-8 border-2 border-dashed border-white/10 rounded-lg hover:border-white/20 transition">
                                             <Icon icon="mdi:upload" width="32" className="mx-auto mb-2" />
-                                            <p className="text-sm">Click to upload or drag and drop</p>
+                                            <p className="text-sm">Haga clic para cargar o arrastre y suelte</p>
                                         </button>
                                     </div>
                                 )}
 
                                 {backgroundTab === "gradient" && (
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Icon icon="mdi:gradient-horizontal" width="16" />
-                                            <span className="text-sm text-white">Gradient Presets</span>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Icon icon="mdi:tune-variant" width="16" className="text-white/70" />
+                                                <span className="text-sm text-white font-medium">Colores personalizados</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-white/10">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full border-2 border-white/20 bg-[#667eea] shadow-inner" />
+                                                        <span className="text-xs font-mono text-white/60">#667EEA</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-white/40 uppercase font-bold mr-2">Inicio</span>
+                                                </div>
+
+                                                <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border border-white/10">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full border-2 border-white/20 bg-[#764ba2] shadow-inner" />
+                                                        <span className="text-xs font-mono text-white/60">#764BA2</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-white/40 uppercase font-bold mr-2">Fin</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {["linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                                "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                                                "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                                                "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-                                                "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-                                                "linear-gradient(135deg, #30cfd0 0%, #330867 100%)"].map((gradient, i) => (
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Icon icon="mdi:gradient-horizontal" width="16" />
+                                                <span className="text-sm text-white">Gradientes</span>
+                                            </div>
+                                            <div className="grid grid-cols-6 gap-2">
+                                                {[
+                                                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                                    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                                                    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                                                    "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+                                                    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                                                    "linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)",
+                                                    "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
+                                                    "linear-gradient(135deg, #f067b4 0%, #8131ff 100%)",
+                                                    "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                                                    "linear-gradient(135deg, #fee2e2 0%, #f87171 100%)",
+                                                    "linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)"
+                                                ].map((gradient, i) => (
                                                     <div
                                                         key={i}
                                                         className="aspect-square rounded-lg cursor-pointer hover:ring-2 ring-white/30"
                                                         style={{ background: gradient }}
                                                     />
                                                 ))}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -197,7 +256,7 @@ export default function Editor() {
                                     <div>
                                         <div className="flex items-center gap-2 mb-3">
                                             <Icon icon="mdi:palette" width="16" />
-                                            <span className="text-sm text-white">Solid Color</span>
+                                            <span className="text-sm text-white">Color sólido</span>
                                         </div>
                                         <div className="grid grid-cols-6 gap-2">
                                             {["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8", "#F7DC6F",
@@ -212,66 +271,43 @@ export default function Editor() {
                                     </div>
                                 )}
 
+                                <div className="flex flex-col gap-5">
+                                    <SliderControl
+                                        icon="mdi:blur"
+                                        label="Fondo borroso"
+                                        value={backgroundBlur}
+                                    />
+
+                                    <div className="text-sm font-medium text-white mt-2">Forma</div>
+                                    <SliderControl
+                                        icon="mdi:border-outside"
+                                        label="Espaciado"
+                                        value={padding}
+                                    />
+                                    <SliderControl
+                                        icon="mdi:rounded-corner"
+                                        label="Esquinas redondeadas"
+                                        value={roundedCorners}
+                                    />
+                                    <SliderControl
+                                        icon="mdi:weather-sunny"
+                                        label="Sombras"
+                                        value={shadows}
+                                    />
+                                </div>
+
                             </div>
                         </>
-                    )}
-
-                    {activeTool === "cursor" && (
-                        <div className="p-4 flex flex-col gap-6">
-                            <div className="flex items-center gap-2 text-white font-medium">
-                                <Icon icon="mdi:cursor-default" width="20" />
-                                <span>Cursor Settings</span>
-                            </div>
-                            <SliderControl label="Cursor Size" value={50} />
-                            <SliderControl label="Click Animation" value={75} />
-                            <div>
-                                <label className="text-sm text-white mb-2 block">Cursor Color</label>
-                                <div className="flex gap-2">
-                                    {["#FF0000", "#00FF00", "#0000FF", "#FFFF00"].map((color, i) => (
-                                        <div
-                                            key={i}
-                                            className="w-10 h-10 rounded-lg cursor-pointer hover:ring-2 ring-white/30"
-                                            style={{ background: color }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTool === "record" && (
-                        <div className="p-4 flex flex-col gap-6">
-                            <div className="flex items-center gap-2 text-white font-medium">
-                                <Icon icon="mdi:record-circle-outline" width="20" />
-                                <span>Recording Settings</span>
-                            </div>
-                            <div>
-                                <label className="text-sm text-white mb-2 block">Quality</label>
-                                <select className="w-full bg-[#27272A] text-white p-2 rounded-md border border-white/10">
-                                    <option>1080p (Full HD)</option>
-                                    <option>720p (HD)</option>
-                                    <option>4K (Ultra HD)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-sm text-white mb-2 block">Frame Rate</label>
-                                <select className="w-full bg-[#27272A] text-white p-2 rounded-md border border-white/10">
-                                    <option>30 FPS</option>
-                                    <option>60 FPS</option>
-                                    <option>120 FPS</option>
-                                </select>
-                            </div>
-                        </div>
                     )}
 
                     {activeTool === "text" && (
                         <div className="p-4 flex flex-col gap-6">
                             <div className="flex items-center gap-2 text-white font-medium">
                                 <Icon icon="mdi:message-text-outline" width="20" />
-                                <span>Text Settings</span>
+                                <span>Configuración de texto</span>
                             </div>
                             <div>
-                                <label className="text-sm text-white mb-2 block">Font</label>
+                                <label className="text-sm text-white mb-2 block">Fuente</label>
                                 <select className="w-full bg-[#27272A] text-white p-2 rounded-md border border-white/10">
                                     <option>Inter</option>
                                     <option>Roboto</option>
@@ -279,8 +315,8 @@ export default function Editor() {
                                     <option>Montserrat</option>
                                 </select>
                             </div>
-                            <SliderControl icon="mdi:format-size" label="Font Size" value={60} />
-                            <SliderControl icon="mdi:opacity" label="Opacity" value={100} />
+                            <SliderControl icon="mdi:format-size" label="Tamaño de fuente" value={60} />
+                            <SliderControl icon="mdi:opacity" label="Opacidad" value={100} />
                         </div>
                     )}
 
@@ -288,186 +324,193 @@ export default function Editor() {
                         <div className="p-4 flex flex-col gap-6">
                             <div className="flex items-center gap-2 text-white font-medium">
                                 <Icon icon="mdi:volume-high" width="20" />
-                                <span>Audio Settings</span>
+                                <span>Configuración de audio</span>
                             </div>
-                            <SliderControl icon="mdi:volume-medium" label="Volume" value={80} />
-                            <SliderControl icon="mdi:tune" label="Bass Boost" value={30} />
-                            <div>
-                                <label className="text-sm text-white mb-2 block">Input Device</label>
-                                <select className="w-full bg-[#27272A] text-white p-2 rounded-md border border-white/10">
-                                    <option>Default Microphone</option>
-                                    <option>System Audio</option>
-                                    <option>Both</option>
-                                </select>
-                            </div>
+                            <SliderControl icon="mdi:volume-medium" label="Volumen" value={80} />
+                            <SliderControl icon="mdi:tune" label="Amplificación de graves" value={30} />
                         </div>
                     )}
 
-                    {activeTool === "settings" && (
+                    {activeTool === "zoom" && (
                         <div className="p-4 flex flex-col gap-6">
-                            <div className="flex items-center gap-2 text-white font-medium">
-                                <Icon icon="mdi:cog-outline" width="20" />
-                                <span>General Settings</span>
-                            </div>
-                            <div>
-                                <label className="text-sm text-white mb-2 block">Export Format</label>
-                                <select className="w-full bg-[#27272A] text-white p-2 rounded-md border border-white/10">
-                                    <option>MP4</option>
-                                    <option>WebM</option>
-                                    <option>GIF</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-sm text-white mb-2 block">Auto-Save</label>
-                                <div className="flex items-center gap-2">
-                                    <input type="checkbox" className="w-4 h-4" />
-                                    <span className="text-sm">Enable auto-save every 5 minutes</span>
+                            <div className="flex items-center">
+                                <div className="flex items-center gap-2 text-white font-medium">
+                                    <Icon icon="iconamoon:zoom-in-bold" width="18" />
+                                    <span>Configuración de zoom</span>
                                 </div>
                             </div>
+                            <div className="space-y-6">
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center">
+                                        <SliderControl icon="mdi:zoom-in" label="Nivel de zoom" value={80} />
+                                        <span className="bg-blue-500/10 px-2 py-0.5 rounded text-xs text-white">2.0x</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <Button variant="outline">
+                                Añadir fragmento
+                            </Button>
                         </div>
                     )}
 
                 </div>
 
-                {/* 3. Main Editor Area */}
-                <div className="flex-1 bg-[#09090B] flex flex-col relative">
-
+                <div className="flex-1 bg-[#09090B] flex flex-col relative overflow-hidden">
                     {/* Top Navbar */}
-                    <div className="h-14 border-b border-white/5 flex items-center justify-between px-4">
-                        <button className="flex items-center gap-1 text-sm hover:text-white transition">
-                            <Icon icon="mdi:magic" />
-                            Presets
-                            <Icon icon="mdi:chevron-down" />
-                        </button>
-
+                    <div className="h-14 border-b border-white/5 flex items-center justify-end px-4 shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 border-r border-white/10 pr-3">
                                 <button className="hover:text-white"><Icon icon="mdi:undo" width="20" /></button>
                                 <button className="hover:text-white opacity-50"><Icon icon="mdi:redo" width="20" /></button>
                             </div>
-                            <Button variant="outline" className="px-3 py-1.5 text-sm" size="sm">
-                                <Icon icon="mdi:share-variant" />
-                                Quick Share
-                            </Button>
-                            <Button variant="primary" className="px-3 py-1.5 text-sm" size="sm">
-                                <Icon icon="mdi:content-save" />
-                                Exportar
-                            </Button>
+                            <ExportDropdown />
                         </div>
                     </div>
 
-                    {/* Canvas Wrapper */}
-                    <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-                        {/* The Main "Video" Canvas */}
-                        <div className="w-[85%] aspect-video bg-[#b1d4ff] rounded-xl relative flex items-center justify-center overflow-hidden shadow-2xl">
-                            {/* Mock Browser Window inside Canvas */}
-                            <div className="w-[90%] h-[85%] bg-[#1E1E1E] rounded-lg shadow-2xl border border-white/10 flex flex-col overflow-hidden">
-                                {/* Fake Browser Header */}
-                                <div className="h-8 bg-[#2D2D2D] flex items-center px-3 gap-2">
-                                    <div className="flex gap-1.5">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                    {/* Canvas Wrapper - Ajustado para ocupar el espacio real */}
+                    <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden bg-[#09090B]">
+                        <div
+                            className="relative flex items-center justify-center shadow-2xl transition-all duration-300 w-full h-full max-w-fit max-h-full"
+                            style={{
+                                padding: `${padding}px`,
+                                backgroundColor: '#b1d4ff',
+                                borderRadius: `${roundedCorners}px`,
+                            }}
+                        >
+                            {videoUrl ? (
+                                <video
+                                    ref={videoRef}
+                                    src={videoUrl}
+                                    className="w-full h-full object-contain"
+                                    style={{
+                                        borderRadius: `${Math.max(0, roundedCorners - padding / 2)}px`,
+                                        boxShadow: `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,0.3)`
+                                    }}
+                                    onTimeUpdate={handleTimeUpdate}
+                                    onLoadedMetadata={handleLoadedMetadata}
+                                    onEnded={() => setIsPlaying(false)}
+                                />
+                            ) : (
+                                <div
+                                    className="w-full h-full aspect-video bg-[#1E1E1E] flex flex-col overflow-hidden"
+                                    style={{
+                                        borderRadius: `${Math.max(0, roundedCorners - padding / 2)}px`
+                                    }}
+                                >
+                                    <div className="h-8 bg-[#2D2D2D] flex items-center px-3 gap-2 shrink-0">
+                                        <div className="flex gap-1.5">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"></div>
+                                            <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]"></div>
+                                            <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]"></div>
+                                        </div>
                                     </div>
-                                    <div className="mx-auto bg-[#1C1C1C] px-24 py-1 rounded text-[10px] text-gray-400">gemini.google.com</div>
+                                    <div className="flex-1 flex items-center justify-center">
+                                        <Icon icon="mdi:video-off-outline" className="text-5xl text-neutral-700" />
+                                    </div>
                                 </div>
-                                {/* Fake Browser Body */}
-                                <div className="flex-1 flex">
-                                    <div className="flex-1 p-4">
-                                        <div className="w-1/2 h-4 bg-gray-700 rounded mb-4"></div>
-                                        <div className="w-full h-2 bg-gray-700 rounded mb-2"></div>
-                                        <div className="w-5/6 h-2 bg-gray-700 rounded mb-2"></div>
-                                        <div className="w-4/6 h-2 bg-gray-700 rounded mb-6"></div>
-                                        <div className="w-full h-24 bg-gray-800 rounded border border-gray-600"></div>
-                                    </div>
-                                    <div className="w-64 border-l border-gray-700 bg-[#252526] p-2 flex flex-col gap-2">
-                                        <div className="w-full h-3 bg-gray-600 rounded"></div>
-                                        <div className="w-full h-2 bg-gray-600 rounded"></div>
-                                        <div className="w-full h-2 bg-gray-600 rounded"></div>
-                                        <div className="w-2/3 h-2 bg-blue-500 rounded mt-4"></div>
-                                    </div>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Player Controls (Bottom of Stage) */}
-                    <div className="h-14 border-t border-white/5 flex items-center justify-between px-6 bg-[#09090B]">
+
+                    {/* Player Controls - shrink-0 evita que esta barra se comprima */}
+                    <div className="h-14 border-t border-white/5 flex items-center justify-between px-6 bg-[#09090B] shrink-0">
                         <div className="flex items-center gap-4 text-xs">
-                            <button><Icon icon="mdi:fit-to-page-outline" width="18" /></button>
+                            <button><Icon icon="material-symbols:fullscreen" width="18" /></button>
                             <div className="flex items-center gap-2">
-                                <button><Icon icon="mdi:magnify-minus-outline" width="18" /></button>
+                                <button><Icon icon="mingcute:zoom-in-line" width="18" /></button>
                                 <div className="w-24 h-1 bg-gray-800 rounded-full">
                                     <div className="w-1/2 h-full bg-gray-500 rounded-full relative">
                                         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full"></div>
                                     </div>
                                 </div>
-                                <button><Icon icon="mdi:magnify-plus-outline" width="18" /></button>
+                                <button><Icon icon="mingcute:zoom-out-line" width="18" /></button>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-6">
-                            <span className="text-xs font-mono">00:00</span>
+                            <span className="text-xs font-mono">{formatTime(currentTime)}</span>
                             <div className="flex items-center gap-3">
-                                <button className="hover:text-white"><Icon icon="mdi:rewind-5" width="22" /></button>
-                                <button className="hover:text-white"><Icon icon="mdi:play" width="28" /></button>
-                                <button className="hover:text-white"><Icon icon="mdi:fast-forward-5" width="22" /></button>
+                                <button className="hover:text-white" onClick={skipBackward}><Icon icon="mdi:rewind-5" width="22" /></button>
+                                <button className="hover:text-white" onClick={togglePlayPause}>
+                                    <Icon icon={isPlaying ? "mdi:pause" : "mdi:play"} width="28" />
+                                </button>
+                                <button className="hover:text-white" onClick={skipForward}><Icon icon="mdi:fast-forward-5" width="22" /></button>
                             </div>
-                            <span className="text-xs font-mono">00:06</span>
+                            <span className="text-xs font-mono">{formatTime(videoDuration)}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
-                                <Icon icon="mdi:crop" /> Crop
+                            <Button variant="outline" size="sm" className="gap-2 px-3 py-2">
+                                <Icon icon="mdi:crop" width="16" /> Recortar
                             </Button>
-                            <Button variant="outline" size="sm">
-                                <Icon icon="mdi:auto-fix" /> Auto
-                            </Button>
+                            <AspectRatioSelect />
                         </div>
                     </div>
-
                 </div>
             </div>
 
             {/* --- BOTTOM SECTION (TIMELINE) --- */}
-            <div className="h-44 bg-[#141417] border-t border-white/5 flex flex-col font-mono text-[10px]">
-                {/* Ruler */}
-                <div className="h-8 border-b border-white/5 flex items-center relative overflow-hidden">
-                    <div className="absolute left-0 w-full flex justify-between px-4 text-gray-500">
-                        <span>00:00</span><span>00:01</span><span>00:02</span><span>00:03</span><span>00:04</span><span>00:05</span><span>00:06</span>
+            <div className="h-[152px] shrink-0 bg-[#0D0D11] border-t border-white/[0.06] flex flex-col font-mono text-[10px]">
+
+                {/* Ruler row */}
+                <div
+                    className="h-7 border-b border-white/[0.04] flex items-center relative overflow-hidden cursor-pointer shrink-0"
+                    onClick={handleSeek}
+                >
+                    {/* Ruler marks offset to match track area start */}
+                    <div className="absolute left-20 right-0 flex justify-between px-3 text-zinc-700">
+                        {videoDuration > 0 ? (
+                            Array.from({ length: 7 }, (_, i) => (
+                                <span key={i}>{formatTime((videoDuration / 6) * i)}</span>
+                            ))
+                        ) : (
+                            <>
+                                <span>00:00</span><span>00:01</span><span>00:02</span>
+                                <span>00:03</span><span>00:04</span><span>00:05</span><span>00:06</span>
+                            </>
+                        )}
                     </div>
-                    {/* Playhead Line */}
-                    <div className="absolute left-[5%] top-0 bottom-0 w-[2px] bg-[#3B82F6] z-10">
-                        <div className="w-3 h-3 bg-[#3B82F6] rounded-sm -ml-[5px]"></div>
+
+                    {/* Playhead */}
+                    <div
+                        className="absolute top-0 bottom-0 w-px bg-blue-500 z-10 transition-[left]"
+                        style={{ left: `calc(80px + ${videoDuration > 0 ? (currentTime / videoDuration) : 0} * (100% - 80px))` }}
+                    >
+                        <div className="w-3 h-3 bg-blue-500 rounded-sm -ml-[5px]" />
                     </div>
                 </div>
 
                 {/* Tracks */}
-                <div className="flex-1 overflow-auto p-2 relative flex flex-col gap-1">
-
-                    {/* Main Video Track */}
-                    <div className="w-[95%] flex-1 bg-[#2b7a4b] rounded flex items-center justify-center text-white text-xs relative border border-[#34A853]">
-                        <div className="absolute left-0 w-1 h-full bg-[#34A853] rounded-l"></div>
-                        <div className="text-center">
-                            Clip <br /> 6.23s
+                <div className="flex flex-1 overflow-hidden">
+                    {/* Track label sidebar */}
+                    <div className="w-20 shrink-0 border-r border-white/[0.04] flex flex-col">
+                        <div className="flex-1 flex items-center px-3">
+                            <span className="text-[9px] uppercase font-semibold tracking-wider text-zinc-700">Video</span>
                         </div>
-                        <div className="absolute right-0 w-1 h-full bg-[#34A853] rounded-r"></div>
+                        <div className="flex-1 flex items-center px-3 border-t border-white/[0.04]">
+                            <span className="text-[9px] uppercase font-semibold tracking-wider text-zinc-700">Zoom</span>
+                        </div>
                     </div>
 
-                    {/* Effect Tracks */}
-                    {/* Añadimos flex-1 a este contenedor para que ocupe la otra mitad del alto disponible */}
-                    <div className="flex-1 flex gap-24 ml-[15%] mt-1">
-
-                        <div className="w-48 h-full bg-[#3B82F6]/80 rounded flex flex-col items-center justify-center text-white border border-[#60A5FA]">
-                            <span>Zoom</span>
-                            <span className="scale-75">Q 2.0x 1.00s</span>
+                    {/* Track content area */}
+                    <div className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden">
+                        {/* Video track */}
+                        <div className="flex-1 flex items-center px-2 py-1.5">
+                            <div
+                                className="h-full rounded-md flex items-center px-3 relative border border-[#34A853]/25 bg-[#182e20]"
+                                style={{ width: videoUrl ? '100%' : '95%' }}
+                            >
+                                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#34A853] rounded-l-md" />
+                                <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-[#34A853] rounded-r-md" />
+                                <span className="text-emerald-400/50 ml-2">
+                                    {videoUrl ? 'Video grabado' : 'Sin video'} · {formatTime(videoDuration)}
+                                </span>
+                            </div>
                         </div>
 
-                        <div className="w-48 h-full bg-[#3B82F6]/80 rounded flex flex-col items-center justify-center text-white border border-[#60A5FA]">
-                            <span>Zoom</span>
-                            <span className="scale-75">Q 2.0x 1.00s</span>
-                        </div>
-
+                        {/* Zoom track */}
+                        <div className="flex-1 flex gap-24 ml-[15%] py-1"> <div className="w-48 h-full bg-[#3B82F6]/80 rounded flex flex-col items-center justify-center text-white border border-[#60A5FA]"> <span>Zoom</span> <span className="scale-75">Q 2.0x 1.00s</span> </div> <div className="w-48 h-full bg-[#3B82F6]/80 rounded flex flex-col items-center justify-center text-white border border-[#60A5FA]"> <span>Zoom</span> <span className="scale-75">Q 2.0x 1.00s</span> </div> </div>
                     </div>
                 </div>
             </div>
