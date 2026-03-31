@@ -61,7 +61,7 @@ export default function InteractiveRecordingSteps() {
     );
   };
 
-  const stepsData = [
+ const stepsData = [
     {
       id: 1,
       title: "Inicia la captura",
@@ -95,39 +95,39 @@ export default function InteractiveRecordingSteps() {
         </div>
       ),
       visual: (
-        <div className="aspect-video bg-[#0A0A0A] border border-white/10 rounded-xl flex items-center justify-center relative group shadow-2xl">
+        <div className="aspect-video bg-[#0A0A0A] border border-white/10 rounded-xl flex items-center justify-center relative group shadow-2xl p-1 sm:p-0">
           <div className="absolute inset-0 bg-[radial-linear(#ffffff22_1px,transparent_1px)] [bg-size:16px_16px] opacity-10"></div>
 
-          <div className="bg-[#292A2D] rounded-xl w-full max-w-full shadow-2xl relative z-10 flex flex-col font-sans border border-white/5">
-
-            <div className="flex justify-between px-4 pt-3 border-b border-white/10 text-[11px] font-medium">
-              <div className="pb-2 text-neutral-400 hover:text-neutral-200 cursor-pointer flex-1 text-center transition-colors">
+          <div className="bg-[#292A2D] rounded-xl w-full max-w-full shadow-2xl relative z-10 flex flex-col font-sans border border-white/5 origin-center">
+            
+            <div className="flex justify-between px-2 sm:px-4 pt-2 sm:pt-3 border-b border-white/10 text-[9px] sm:text-[11px] font-medium">
+              <div className="pb-2 text-neutral-400 hover:text-neutral-200 cursor-pointer flex-1 text-center transition-colors truncate px-1">
                 Pestaña de Brave
               </div>
-              <div className="pb-2 text-[#C0B4F0] border-b-2 border-[#C0B4F0] flex-1 text-center">
+              <div className="pb-2 text-[#C0B4F0] border-b-2 border-[#C0B4F0] flex-1 text-center truncate px-1">
                 Ventana
               </div>
-              <div className="pb-2 text-neutral-400 hover:text-neutral-200 cursor-pointer flex-1 text-center transition-colors">
+              <div className="pb-2 text-neutral-400 hover:text-neutral-200 cursor-pointer flex-1 text-center transition-colors truncate px-1 hidden sm:block">
                 Pantalla completa
               </div>
             </div>
 
-            <div className="p-5 flex gap-4 h-37.5">
-              <div className="w-32.5 flex flex-col gap-2">
-                <div className="w-full h-18.75 bg-[#141414] rounded-md border-2 border-[#C0B4F0] overflow-hidden shadow-inner relative transition-colors cursor-pointer">
-                  <div className="absolute top-2 left-2 w-full h-full bg-neutral-800 rounded-t-md border border-white/5"></div>
+            <div className="p-3 sm:p-5 flex justify-center gap-3 sm:gap-4 h-auto sm:h-37.5">
+              <div className="w-24 sm:w-32.5 flex flex-col gap-2">
+                <div className="w-full h-14 sm:h-18.75 bg-[#141414] rounded-md border-2 border-[#C0B4F0] overflow-hidden shadow-inner relative transition-colors cursor-pointer">
+                  <div className="absolute top-1 sm:top-2 left-1 sm:left-2 w-full h-full bg-neutral-800 rounded-t-md border border-white/5"></div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-neutral-200">
+                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-neutral-200">
                   <Icon icon="logos:brave" width="12" className="shrink-0" />
-                  <span className="truncate">openvid - Crea tomas ci...</span>
+                  <span className="truncate">openvid - Crea tomas...</span>
                 </div>
               </div>
 
-              <div className="w-32.5 flex flex-col gap-2">
-                <div className="w-full h-18.75 bg-[#141414] rounded-md border border-gray-500 overflow-hidden shadow-inner relative cursor-pointer">
+              <div className="w-24 sm:w-32.5 flex flex-col gap-2">
+                <div className="w-full h-14 sm:h-18.75 bg-[#141414] rounded-md border border-gray-500 overflow-hidden shadow-inner relative cursor-pointer">
                   <div className="absolute top-1 left-1 w-[95%] h-[90%] bg-[#1E1E1E] rounded border border-white/5 flex flex-col">
-                    <div className="h-2 border-b border-white/5"></div>
-                    <div className="p-1.5 space-y-1">
+                    <div className="h-1.5 sm:h-2 border-b border-white/5"></div>
+                    <div className="p-1 sm:p-1.5 space-y-1">
                       <div className="h-0.5 w-1/2 bg-blue-400/50 rounded"></div>
                       <div className="h-0.5 w-3/4 bg-green-400/50 rounded"></div>
                       <div className="h-0.5 w-1/3 bg-orange-400/50 rounded"></div>
@@ -135,29 +135,29 @@ export default function InteractiveRecordingSteps() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-neutral-200">
+                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-neutral-200">
                   <Icon icon="logos:visual-studio-code" width="12" className="shrink-0" />
-                  <span className="truncate">RecordingSteps.tsx - op...</span>
+                  <span className="truncate">RecordingSteps.tsx</span>
                 </div>
               </div>
             </div>
 
-            <div className="px-5 pb-5">
-              <div className="border-t border-white/10 pt-4 flex justify-between items-center mb-6">
-                <div className="flex items-center gap-2 text-[11px] text-neutral-300">
-                  <Icon icon="solar:volume-loud-bold" width="14" className="text-neutral-400" />
-                  Compartir también el audio del sistema
+            <div className="px-3 sm:px-5 pb-3 sm:pb-5">
+              <div className="border-t border-white/10 pt-3 sm:pt-4 flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
+                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-neutral-300">
+                  <Icon icon="solar:volume-loud-bold" width="14" className="text-neutral-400 shrink-0" />
+                  Compartir también el audio
                 </div>
-                <div className="w-7 h-4 bg-[#5F6368] rounded-full relative shadow-inner">
+                <div className="w-7 h-4 bg-[#5F6368] rounded-full relative shadow-inner shrink-0">
                   <div className="absolute top-0.5 left-0.5 w-3 h-3 bg-neutral-300 rounded-full shadow"></div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3">
-                <button className="px-5 py-1.5 bg-[#3C3D3F] text-neutral-400 rounded-full text-[11px] font-medium cursor-not-allowed">
+              <div className="flex w-full sm:w-auto justify-end gap-2 sm:gap-3">
+                <button className="flex-1 sm:flex-none px-4 sm:px-5 py-1.5 bg-[#3C3D3F] text-neutral-400 rounded-full text-[10px] sm:text-[11px] font-medium cursor-not-allowed">
                   Compartir
                 </button>
-                <button className="px-5 py-1.5 bg-[#292A2D] text-white rounded-full text-[11px] font-medium border border-[#C0B4F0] ring-1 ring-[#C0B4F0] ring-offset-2 ring-offset-[#292A2D] outline-none">
+                <button className="flex-1 sm:flex-none px-4 sm:px-5 py-1.5 bg-[#292A2D] text-white rounded-full text-[10px] sm:text-[11px] font-medium border border-[#C0B4F0] ring-1 ring-[#C0B4F0] ring-offset-2 ring-offset-[#292A2D] outline-none">
                   Cancelar
                 </button>
               </div>
@@ -177,31 +177,31 @@ export default function InteractiveRecordingSteps() {
       isReversed: false,
       actionButton: null,
       visual: (
-        <div className="aspect-video bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden flex items-center justify-center relative group shadow-2xl">
+        <div className="aspect-video bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden flex items-center justify-center relative group shadow-2xl p-4">
           <div className="absolute inset-0 bg-[radial-linear(#ffffff22_1px,transparent_1px)] [bg-size:16px_16px] opacity-10"></div>
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-75 h-37.5 bg-blue-500/5 rounded-[100%] blur-3xl"></div>
 
-          <div className="bg-[#1C1A20] border border-white/5 rounded-full pl-4 pr-6 py-2 flex items-center gap-4 shadow-2xl z-10">
-
-            <div className="flex items-center gap-3">
-              <Icon icon="ic:baseline-pause" className="text-white text-lg" />
-              <span className="text-[11px] text-[#E8EAED]">
+          <div className="bg-[#1C1A20] border border-white/5 rounded-2xl sm:rounded-full px-4 sm:pl-4 sm:pr-6 py-3 sm:py-2 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 shadow-2xl z-10 w-full sm:w-auto max-w-[90%] sm:max-w-none text-center sm:text-left">
+            
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+              <Icon icon="ic:baseline-pause" className="text-white text-lg hidden sm:block" />
+              <span className="text-[10px] sm:text-[11px] text-[#E8EAED] leading-tight">
                 https://openvid.dev está compartiendo una ventana.
               </span>
             </div>
 
-            <div className="flex items-center gap-4 ml-2">
-              <button className="bg-[#B7BEF8] hover:bg-[#A6AEF7] text-[#141414] text-[11px] font-medium px-4 py-1.5 rounded-full transition-colors">
+            <div className="flex items-center gap-3 sm:gap-4 sm:ml-2 mt-1 sm:mt-0">
+              <button className="bg-[#B7BEF8] hover:bg-[#A6AEF7] text-[#141414] text-[10px] sm:text-[11px] font-medium px-3 sm:px-4 py-1.5 rounded-full transition-colors whitespace-nowrap cursor-default!">
                 Dejar de compartir
               </button>
 
               <div className="relative group/btn cursor-pointer">
-                <span className="text-[#8AB4F8] text-[11px] font-medium hover:text-white transition-colors">
+                <span className="text-[#8AB4F8] text-[10px] sm:text-[11px] font-medium hover:text-white transition-colors">
                   Ocultar
                 </span>
                 <Icon
                   icon="solar:cursor-default-bold"
-                  className="absolute -bottom-5 -right-3 text-white text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20"
+                  className="absolute -bottom-4 sm:-bottom-5 -right-2 sm:-right-3 text-white text-lg sm:text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20"
                 />
               </div>
             </div>
@@ -222,27 +222,27 @@ export default function InteractiveRecordingSteps() {
       actionButton: null,
       visual: (
         <div className="aspect-video bg-[#000B13] border border-white/10 rounded-xl overflow-hidden relative group shadow-2xl">
-          <div className="absolute inset-0 bg-[#000B13]/95 backdrop-blur-md flex items-center justify-center z-10 p-6">
+          <div className="absolute inset-0 bg-[#000B13]/95 backdrop-blur-md flex items-center justify-center z-10 p-4 sm:p-6">
 
             <div className="flex flex-col items-center justify-center h-full w-full max-h-full">
-
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center shrink-0">
+              <div className="relative w-20 h-20 sm:w-32 sm:h-32 flex items-center justify-center shrink-0">
                 <div className="absolute inset-0 rounded-full bg-[#00A3FF]/20 animate-pulse" />
-                <div className="absolute inset-4 rounded-full bg-[#00A3FF]/10" />
+                <div className="absolute inset-2 sm:inset-4 rounded-full bg-[#00A3FF]/10" />
 
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-linear-to-br from-[#00A3FF] to-blue-800 p-0.5 shadow-[0_0_30px_rgba(0,163,255,0.2)]">
+                <div className="relative w-16 h-16 sm:w-28 sm:h-28 rounded-full bg-linear-to-br from-[#00A3FF] to-blue-800 p-0.5 shadow-[0_0_30px_rgba(0,163,255,0.2)]">
                   <div className="w-full h-full rounded-full bg-[#0E0E12] flex items-center justify-center">
-                    <span className="text-5xl sm:text-6xl font-bold text-white tabular-nums tracking-tighter">
+                    <span className="text-3xl sm:text-6xl font-bold text-white tabular-nums tracking-tighter">
                       5
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="text-center mt-4 sm:mt-6 flex flex-col gap-1 sm:gap-2">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight leading-tight">
-                  ¡Cambia de pestaña ahora!
+              
+              <div className="text-center mt-3 sm:mt-6 flex flex-col gap-1 sm:gap-2">
+                <h2 className="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight leading-tight">
+                  ¡Cambia de pestaña!
                 </h2>
-                <p className="text-xs sm:text-sm text-neutral-400 max-w-60 mx-auto leading-relaxed">
+                <p className="text-[10px] sm:text-sm text-neutral-400 max-w-48 sm:max-w-60 mx-auto leading-relaxed">
                   La grabación iniciará en la pantalla que seleccionaste.
                 </p>
               </div>
@@ -282,26 +282,29 @@ export default function InteractiveRecordingSteps() {
           <div className="absolute top-1/2 left-0 w-full h-px bg-white/5"></div>
           <div className="absolute top-0 left-1/2 w-px h-full bg-white/5"></div>
 
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto scale-90 sm:scale-100">
-            <div className="flex items-center gap-4 bg-[#1E1E20] border border-white/10 rounded-full pl-5 pr-2 py-2 shadow-2xl">
-              <div className="flex items-center gap-3 pr-2 border-r border-white/10">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[11px] text-white font-medium">Grabando</span>
-                <span className="text-[11px] text-red-400 font-mono font-bold">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto w-full px-4 sm:px-0 sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 bg-[#1E1E20] border border-white/10 rounded-2xl sm:rounded-full py-3 sm:pl-5 sm:pr-2 sm:py-2 shadow-2xl mx-auto max-w-[200px] sm:max-w-none">
+              
+              <div className="flex items-center justify-center gap-2 sm:gap-3 w-full sm:w-auto pb-2 sm:pb-0 border-b sm:border-b-0 sm:border-r border-white/10 sm:pr-2">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] sm:text-[11px] text-white font-medium">Grabando</span>
+                <span className="text-[10px] sm:text-[11px] text-red-400 font-mono font-bold">
                   00:42
                 </span>
               </div>
-              <button className="group flex items-center gap-3 px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-full transition-all">
-                <div className="flex items-center gap-2 text-red-400 text-sm font-medium">
-                  <div className="w-3 h-3 bg-red-500 rounded-sm group-hover:scale-110 transition-transform" />
+              
+              <button className="group flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:bg-red-500/10 sm:hover:bg-red-500/20 sm:border border-transparent sm:border-red-500/30 hover:border-red-500/50 rounded-full transition-all w-full sm:w-auto cursor-default!">
+                <div className="flex items-center gap-2 text-red-400 text-xs sm:text-sm font-medium">
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-sm group-hover:scale-110 transition-transform" />
                   Detener
                 </div>
-                <div className="flex items-center gap-1 text-[10px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
+                <div className="hidden sm:flex items-center gap-1 text-[10px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
                   <kbd>Alt</kbd>
                   <span>+</span>
                   <kbd>D</kbd>
                 </div>
               </button>
+
             </div>
           </div>
         </div>
@@ -310,7 +313,7 @@ export default function InteractiveRecordingSteps() {
   ];
 
   return (
-    <div id="docs" className="w-full max-w-7xl mx-auto px-6 py-24 text-left">
+    <div id="docs" className="w-full max-w-7xl mx-auto px-0 sm:px-6 py-24 text-left">
       <div className="max-w-3xl mx-auto text-center mb-32">
         <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white mb-6 leading-tight drop-shadow-[1.2px_1.2px_100.2px_rgba(183,203,248,1)]">
           Crea tu toma en <br />

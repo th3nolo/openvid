@@ -182,15 +182,23 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
             }
         }
 
-        // Load new images
+        // Load new images with enhanced error handling
         for (const element of canvasElements) {
             if (element.type === "image") {
                 const imageElement = element as ImageElement;
                 if (!cache.has(imageElement.imagePath)) {
                     const img = new Image();
                     img.crossOrigin = "anonymous"; // Prevenir problemas de CORS al exportar
+                    
+                    img.onload = () => {
+                        cache.set(imageElement.imagePath, img);
+                    };
+                    
+                    img.onerror = () => {
+                        console.error(`Failed to load canvas element image: ${imageElement.imagePath}`);
+                    };
+                    
                     img.src = imageElement.imagePath;
-                    img.onload = () => cache.set(imageElement.imagePath, img);
                 }
             }
         }
@@ -336,7 +344,9 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
             behindVideo ? el.zIndex < VIDEO_Z_INDEX : el.zIndex >= VIDEO_Z_INDEX
         );
         const sortedElements = [...filteredElements].sort((a, b) => a.zIndex - b.zIndex);
-        const SVG_SCALE_FACTOR = 0.45;
+
+        // Use smaller dimension as reference for consistent scaling across different aspect ratios
+        const referenceSize = Math.min(canvasWidth, canvasHeight);
 
         for (const element of sortedElements) {
             if (element.type === "svg") {
@@ -360,9 +370,11 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
 
                 const elemX = (svgElement.x / 100) * canvasWidth;
                 const elemY = (svgElement.y / 100) * canvasHeight;
-                const elemWidth = (svgElement.width / 100) * canvasWidth * SVG_SCALE_FACTOR;
-                const elemHeight = (svgElement.height / 100) * canvasWidth * SVG_SCALE_FACTOR;
+                // Use reference size for both width and height to maintain square aspect ratio for SVGs
+                const elemWidth = (svgElement.width / 100) * referenceSize;
+                const elemHeight = (svgElement.height / 100) * referenceSize;
 
+                // Translate to element position, rotate, then draw centered
                 ctx.translate(elemX, elemY);
                 ctx.rotate((svgElement.rotation * Math.PI) / 180);
                 ctx.globalAlpha = svgElement.opacity;
@@ -384,8 +396,25 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
 
                 const elemX = (element.x / 100) * canvasWidth;
                 const elemY = (element.y / 100) * canvasHeight;
-                const elemWidth = (element.width / 100) * canvasWidth;
-                const elemHeight = (element.height / 100) * canvasWidth;
+                
+                // Calculate element dimensions using reference size to maintain consistent scaling
+                const elemWidth = (element.width / 100) * referenceSize;
+                const elemHeight = (element.height / 100) * referenceSize;
+
+                // For images, maintain the original aspect ratio
+                const imgAspectRatio = img.naturalWidth / img.naturalHeight;
+                let finalWidth = elemWidth;
+                let finalHeight = elemHeight;
+                
+                // Apply object-contain logic: scale to fit within element bounds while maintaining aspect ratio
+                const elementAspectRatio = elemWidth / elemHeight;
+                if (imgAspectRatio > elementAspectRatio) {
+                    // Image is wider - fit to width
+                    finalHeight = elemWidth / imgAspectRatio;
+                } else {
+                    // Image is taller - fit to height
+                    finalWidth = elemHeight * imgAspectRatio;
+                }
 
                 ctx.translate(elemX, elemY);
                 ctx.rotate((element.rotation * Math.PI) / 180);
@@ -393,10 +422,10 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
 
                 ctx.drawImage(
                     img,
-                    -elemWidth / 2,
-                    -elemHeight / 2,
-                    elemWidth,
-                    elemHeight
+                    -finalWidth / 2,
+                    -finalHeight / 2,
+                    finalWidth,
+                    finalHeight
                 );
 
                 ctx.restore();
@@ -410,7 +439,9 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                 ctx.rotate((element.rotation * Math.PI) / 180);
                 ctx.globalAlpha = element.opacity;
 
-                const scaledFontSize = element.fontSize * (canvasWidth / 1080);
+                // Scale font size proportionally to canvas size using reference dimension
+                // Base reference is 1080px (typical preview height)
+                const scaledFontSize = element.fontSize * (referenceSize / 1080);
                 const fontWeight = element.fontWeight === 'normal' ? '400' : element.fontWeight === 'medium' ? '500' : '700';
                 ctx.font = `${fontWeight} ${scaledFontSize}px ${element.fontFamily}`;
                 ctx.fillStyle = element.color;
@@ -427,10 +458,18 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     // Función para dibujar un frame en el canvas de exportación
     const drawFrame = async () => {
         const canvas = exportCanvasRef.current;
-        const ctx = canvas?.getContext('2d');
+        const ctx = canvas?.getContext('2d', {
+            alpha: true,
+            desynchronized: false,
+            willReadFrequently: false
+        });
         const video = videoRef.current;
 
         if (!canvas || !ctx || !video) return;
+
+        // Enable high-quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;

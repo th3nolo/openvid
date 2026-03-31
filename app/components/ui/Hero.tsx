@@ -20,14 +20,12 @@ export default function Hero({ onVideoUpload }: HeroProps) {
         if (!file.type.startsWith("video/")) return;
         setIsUploading(true);
         try {
-            // Save video to IndexedDB before navigating
             await saveUploadedVideo(file);
             
             if (onVideoUpload) {
                 onVideoUpload(file);
             }
             
-            // Navigate to editor after saving
             router.push("/editor");
         } catch (error) {
             console.error("Error uploading video:", error);
@@ -50,7 +48,6 @@ export default function Hero({ onVideoUpload }: HeroProps) {
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        // Evitamos que el leave se dispare si estamos dentro del mismo contenedor
         setIsDragging(false);
     };
 

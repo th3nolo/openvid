@@ -21,19 +21,20 @@ export function ElementsMenu({
 }: ElementsMenuProps) {
     const [mode, setMode] = useState<"text" | "elements">("elements");
 
-    const [shapeSize, setShapeSize] = useState(15);
+    // Professional default values for elements
+    const [shapeSize, setShapeSize] = useState(20);
     const [shapeColor, setShapeColor] = useState("#FFFFFF");
     const [shapeOpacity, setShapeOpacity] = useState(100);
 
     const [textContent, setTextContent] = useState("Texto");
-    const [textFontSize, setTextFontSize] = useState(32);
+    const [textFontSize, setTextFontSize] = useState(48);
     const [textColor, setTextColor] = useState("#FFFFFF");
     const [textOpacity, setTextOpacity] = useState(100);
     const [textFontFamily, setTextFontFamily] = useState("Inter");
-    const [textFontWeight, setTextFontWeight] = useState<"normal" | "medium" | "bold">("normal");
+    const [textFontWeight, setTextFontWeight] = useState<"normal" | "medium" | "bold">("bold");
 
     const [imageOpacity, setImageOpacity] = useState(100);
-    const [imageSize, setImageSize] = useState(25);
+    const [imageSize, setImageSize] = useState(30);
 
     const [selectedSvgCategory, setSelectedSvgCategory] = useState<string>("all");
     const [selectedImageCategory, setSelectedImageCategory] = useState<string>("all");
@@ -69,17 +70,18 @@ export function ElementsMenu({
                     setMode("text");
                 }
             } else {
-                setShapeSize(15);
+                // Reset to default values when no element is selected
+                setShapeSize(20);
                 setShapeColor("#FFFFFF");
                 setShapeOpacity(100);
-                setImageSize(25);
+                setImageSize(30);
                 setImageOpacity(100);
                 setTextContent("Texto");
-                setTextFontSize(32);
+                setTextFontSize(48);
                 setTextColor("#FFFFFF");
                 setTextOpacity(100);
                 setTextFontFamily("Inter");
-                setTextFontWeight("normal");
+                setTextFontWeight("bold");
             }
 
             setTimeout(() => { isSyncing.current = false; }, 0);

@@ -168,13 +168,15 @@
 
 @theme {
   --ease-elegant: cubic-bezier(0.16, 1, 0.3, 1);
-   --gradient-radial-primary: radial-gradient(circle at center, #00A3FF 0%, #0057FF 100%);
+  --gradient-radial-primary: radial-gradient(circle at center, #00A3FF 0%, #0057FF 100%);
+
   @keyframes reveal {
     from {
       opacity: 0;
       transform: translateY(20px) scale(0.98);
       filter: blur(8px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
@@ -244,4 +246,40 @@ button {
 .squircle-element {
   corner-shape: squircle;
   border-radius: 20px;
+}
+.hero-perspective-container {
+  perspective: 1500px;
+}
+
+.hero-3d-wrapper {
+  transform-style: preserve-3d;
+  will-change: transform, filter;
+  
+  animation: heroImageAppear 1ms linear, heroImageFadeIn 1s ease-out;
+  animation-timeline: scroll(root), auto;
+  animation-range: 0% 12%;
+}
+
+@keyframes heroImageAppear {
+  from {
+    transform: translateY(-12rem) translateZ(-30rem) rotateX(45deg);
+    filter: drop-shadow(0 0 0 rgba(0, 163, 255, 0)) drop-shadow(0 0 0 rgba(0, 55, 128, 0));
+  }
+  to {
+    transform: translateY(0rem) translateZ(0rem) rotateX(0deg);
+    filter: drop-shadow(0 8px 16px rgba(0, 163, 255, 0.3)) drop-shadow(0 24px 48px rgba(0, 55, 128, 0.3));
+  }
+}
+
+@keyframes heroImageFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.atropos-highlight {
+  border-radius: 1rem;
 }
