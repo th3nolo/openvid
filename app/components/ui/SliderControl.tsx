@@ -10,11 +10,12 @@ interface SliderControlProps {
     min?: number;
     max?: number;
     step?: number; // Step for decimal values (default: 1)
+    suffix?: string; // Optional suffix to display after value (e.g., "%", "px")
     onChange?: (value: number) => void;
     onChangeEnd?: () => void; // Called when dragging ends
 }
 
-export function SliderControl({ icon, label, value, min = 0, max = 100, step = 1, onChange, onChangeEnd }: SliderControlProps) {
+export function SliderControl({ icon, label, value, min = 0, max = 100, step = 1, suffix = "", onChange, onChangeEnd }: SliderControlProps) {
     const [isDragging, setIsDragging] = useState(false);
     const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +86,7 @@ export function SliderControl({ icon, label, value, min = 0, max = 100, step = 1
 
                 </div>
                 <span className="text-[11px] font-mono text-white/50 rounded  text-center">
-                    {step < 1 ? value.toFixed(1) : value}
+                    {step < 1 ? value.toFixed(1) : value}{suffix}
                 </span>
             </div>
         </div>

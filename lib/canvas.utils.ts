@@ -1,5 +1,5 @@
 import { AspectRatio } from "@/types/editor.types";
-import { zoomLevelToFactor, speedToTransitionMs, easeOutQuart, ZoomStateCanvas, ZoomFragment } from "@/types/zoom.types";
+import { ZoomStateCanvas, ZoomFragment, calculateZoomPhaseState } from "@/types/zoom.types";
 export function drawRoundedRect(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -205,12 +205,25 @@ export function applyCanvasBackground(
     ctx.fillRect(0, 0, width, height);
 }
 
+// Extended zoom state for canvas export including 3D effects
+export interface ZoomStateCanvasExport extends ZoomStateCanvas {
+    rotateX: number;
+    rotateY: number;
+    perspective: number;
+}
+
 export function calculateSmoothZoom(
     frameTime: number,
-    zoomFragments: ZoomFragment[],
-    defaultExitSpeed: number = 3
-): ZoomStateCanvas {
-    const DEFAULT_STATE: ZoomStateCanvas = { scale: 1, focusX: 50, focusY: 50 };
+    zoomFragments: ZoomFragment[]
+): ZoomStateCanvasExport {
+    const DEFAULT_STATE: ZoomStateCanvasExport = { 
+        scale: 1, 
+        focusX: 50, 
+        focusY: 50,
+        rotateX: 0,
+        rotateY: 0,
+        perspective: 0,
+    };
 
     if (!zoomFragments.length) return DEFAULT_STATE;
 
@@ -220,58 +233,25 @@ export function calculateSmoothZoom(
         f => frameTime >= f.startTime && frameTime <= f.endTime
     );
 
-    // Find the previous fragment that ended before current time (for exit transition)
-    const previousFragment = sortedFragments
-        .filter(f => f.endTime < frameTime)
-        .sort((a, b) => b.endTime - a.endTime)[0];
-
     if (activeFragment) {
-        const transitionMs = speedToTransitionMs(activeFragment.speed);
-        const transitionSec = transitionMs / 1000;
-        const targetScale = zoomLevelToFactor(activeFragment.zoomLevel);
-
-        const timeIntoFragment = frameTime - activeFragment.startTime;
-
-        let scale: number;
-
-        if (timeIntoFragment < transitionSec) {
-            const progress = Math.min(1, timeIntoFragment / transitionSec);
-            const easedProgress = easeOutQuart(progress);
-            scale = 1 + (targetScale - 1) * easedProgress;
-        } else {
-            scale = targetScale;
-        }
-
+        // Use calculateZoomPhaseState with forExport=true for animated scale
+        const phaseState = calculateZoomPhaseState(activeFragment, frameTime, true);
+        
         return {
-            scale,
-            focusX: activeFragment.focusX,
-            focusY: activeFragment.focusY,
+            scale: phaseState.scale,
+            focusX: phaseState.focusX,
+            focusY: phaseState.focusY,
+            rotateX: phaseState.rotateX,
+            rotateY: phaseState.rotateY,
+            perspective: phaseState.perspective,
         };
-    }
-
-    // Not inside any fragment - check if we're in an exit transition from a previous fragment
-    if (previousFragment) {
-        const exitTransitionMs = speedToTransitionMs(previousFragment.speed);
-        const exitTransitionSec = exitTransitionMs / 1000;
-        const timeSinceEnd = frameTime - previousFragment.endTime;
-
-        if (timeSinceEnd < exitTransitionSec) {
-            const progress = Math.min(1, timeSinceEnd / exitTransitionSec);
-            const easedProgress = easeOutQuart(progress); // Same easing as entry for professional feel
-            const targetScale = zoomLevelToFactor(previousFragment.zoomLevel);
-            const scale = targetScale - (targetScale - 1) * easedProgress;
-
-            return {
-                scale,
-                focusX: previousFragment.focusX,
-                focusY: previousFragment.focusY,
-            };
-        }
     }
 
     return DEFAULT_STATE;
 }
 
+
+// Funciones para determinar esquina más cercana y estilos de las esquinas para rotar elementos
 export type Corner = "top-left" | "top-right" | "bottom-right" | "bottom-left";
 
 export function getNearestCorner(e: React.MouseEvent<HTMLElement>, rotationDeg = 0): Corner {

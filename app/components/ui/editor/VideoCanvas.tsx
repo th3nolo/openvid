@@ -4,21 +4,22 @@ import { useRef, useEffect, useImperativeHandle, forwardRef, useMemo, useState, 
 import type { VideoCanvasHandle, VideoCanvasProps, VideoThumbnail } from "@/types";
 import type { ImageElement, SvgElement, CanvasElement } from "@/types/canvas-elements.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
-import { interpolateCursorPosition, DEFAULT_CURSOR_CONFIG, EMPTY_CURSOR_DATA } from "@/types/cursor.types";
-import type { CursorKeyframe } from "@/types/cursor.types";
+// import { interpolateCursorPosition, DEFAULT_CURSOR_CONFIG, EMPTY_CURSOR_DATA } from "@/types/cursor.types";
+// import type { CursorKeyframe } from "@/types/cursor.types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
 import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getMaxWidth, Corner, getCornerStyle, getNearestCorner } from "@/lib/canvas.utils";
 import { drawMockupToCanvas } from "@/lib/mockup-canvas.utils";
-import { zoomLevelToFactor, speedToTransitionMs, ZOOM_EASING } from "@/types/zoom.types";
+import { speedToTransitionMs, ZOOM_EASING, calculateZoomPhaseState } from "@/types/zoom.types";
 import type { ZoomFragment } from "@/types/zoom.types";
 import PlaceholderEditor from "../PlaceholderEditor";
 import { MockupWrapper } from "./mockups/MockupWrapper";
 import { DEFAULT_MOCKUP_CONFIG } from "@/types/mockup.types";
 import { calculateSmoothZoom } from "@/lib/canvas.utils";
 import { SVG_COMPONENTS, getSvgDataUrl } from "@/components/canvas-svg";
-import { getCursorSvgDataUrl } from "@/components/cursor-svg";
+// import { getCursorSvgDataUrl } from "@/components/cursor-svg";
 import { VIDEO_Z_INDEX, BOTTOM_ONLY_RADIUS_MOCKUPS, SELF_SHADOWING_MOCKUPS } from "@/lib/constants";
 import { RotationHandleIcon } from "@/components/ui/RotationHandleIcon";
+import { CanvasElementsLayer } from "./CanvasElementsLayer";
 export type { VideoCanvasHandle, VideoCanvasProps };
 
 export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(function VideoCanvas({
@@ -55,8 +56,8 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     onElementUpdate,
     onElementSelect,
     // Cursor props
-    cursorConfig = DEFAULT_CURSOR_CONFIG,
-    cursorData = EMPTY_CURSOR_DATA,
+    // cursorConfig = DEFAULT_CURSOR_CONFIG,
+    // cursorData = EMPTY_CURSOR_DATA,
 }, ref) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
@@ -72,55 +73,78 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
         return zoomFragments.find(f => currentTime >= f.startTime && currentTime <= f.endTime) || null;
     }, [zoomFragments, currentTime]);
 
-    // Calculate zoom transform for visual preview
-    // Uses fragment's speed for entry, and a smooth default for exit
+    // Calculate zoom transform for visual preview using 3-phase system
+    // Phase 1: Entry (zoom in), Phase 2: Hold with optional movement, Phase 3: Exit (zoom out)
     const zoomTransform = useMemo(() => {
-        // Default smooth exit transition (speed 3 = ~1.4s for nice smooth exit)
+        // No active fragment - smooth exit to base scale
         if (!activeZoomFragment) {
-            // Usar la velocidad del último fragmento que terminó
             const lastFragment = zoomFragments
                 .filter(f => f.endTime < currentTime)
                 .sort((a, b) => b.endTime - a.endTime)[0];
             const exitMs = lastFragment ? speedToTransitionMs(lastFragment.speed) : speedToTransitionMs(3);
-            return { scale: 1, translateX: 0, translateY: 0, transitionMs: exitMs };
+            return {
+                scale: 1,
+                translateX: 0,
+                translateY: 0,
+                transitionMs: exitMs,
+                rotateX: 0,
+                rotateY: 0,
+                perspective: lastFragment?.enable3D ? 600 : 0,
+                isMoving: false,
+            };
         }
 
-        const scale = zoomLevelToFactor(activeZoomFragment.zoomLevel);
-        // Calculate translation to keep focus point centered
-        const translateX = (50 - activeZoomFragment.focusX) * (scale - 1) * 2;
-        const translateY = (50 - activeZoomFragment.focusY) * (scale - 1) * 2;
-        const transitionMs = speedToTransitionMs(activeZoomFragment.speed);
+        // Calculate 3-phase state
+        const phaseState = calculateZoomPhaseState(activeZoomFragment, currentTime);
 
-        return { scale, translateX, translateY, transitionMs };
+        // Calculate translation to keep focus point centered
+        const translateX = (50 - phaseState.focusX) * (phaseState.scale - 1) * 2;
+        const translateY = (50 - phaseState.focusY) * (phaseState.scale - 1) * 2;
+
+        // During hold phase with movement, reduce transition to avoid jarring
+        // CSS transitions should only apply to scale (entry/exit), not translate during movement
+        const isMoving = activeZoomFragment.movementEnabled && phaseState.phase === 'hold';
+        const transitionMs = isMoving ? 50 : speedToTransitionMs(activeZoomFragment.speed);
+
+        return {
+            scale: phaseState.scale,
+            translateX,
+            translateY,
+            transitionMs,
+            rotateX: phaseState.rotateX,
+            rotateY: phaseState.rotateY,
+            perspective: phaseState.perspective,
+            isMoving,
+        };
     }, [activeZoomFragment, zoomFragments, currentTime]);
 
     // Calculate current cursor position from cursor data
-    const cursorPosition = useMemo<CursorKeyframe | null>(() => {
+    /*const cursorPosition = useMemo<CursorKeyframe | null>(() => {
         if (!cursorConfig.visible || cursorConfig.style === "none" || !cursorData.hasCursorData) {
             return null;
         }
         return interpolateCursorPosition(cursorData.keyframes, currentTime, cursorConfig.smoothing);
-    }, [cursorConfig.visible, cursorConfig.style, cursorConfig.smoothing, cursorData.hasCursorData, cursorData.keyframes, currentTime]);
+    }, [cursorConfig.visible, cursorConfig.style, cursorConfig.smoothing, cursorData.hasCursorData, cursorData.keyframes, currentTime]);*/
 
     // Get cursor SVG data URL for rendering
-    const cursorSvgDataUrl = useMemo(() => {
+    /*const cursorSvgDataUrl = useMemo(() => {
         if (!cursorPosition || cursorConfig.style === "none") return null;
         return getCursorSvgDataUrl(cursorConfig.style, cursorPosition.state, cursorConfig.color, cursorConfig.size);
-    }, [cursorPosition, cursorConfig.style, cursorConfig.color, cursorConfig.size]);
+    }, [cursorPosition, cursorConfig.style, cursorConfig.color, cursorConfig.size]);*/
 
     // Preload cursor image for canvas rendering
-    const cursorImageRef = useRef<HTMLImageElement | null>(null);
-    useEffect(() => {
-        if (cursorSvgDataUrl) {
-            const img = new Image();
-            img.src = cursorSvgDataUrl;
-            img.onload = () => {
-                cursorImageRef.current = img;
-            };
-        } else {
-            cursorImageRef.current = null;
-        }
-    }, [cursorSvgDataUrl]);
+    /* const cursorImageRef = useRef<HTMLImageElement | null>(null);
+     useEffect(() => {
+         if (cursorSvgDataUrl) {
+             const img = new Image();
+             img.src = cursorSvgDataUrl;
+             img.onload = () => {
+                 cursorImageRef.current = img;
+             };
+         } else {
+             cursorImageRef.current = null;
+         }
+     }, [cursorSvgDataUrl]);*/
 
     // Determinar qué background mostrar basado en el tab activo
     const shouldShowUnsplashOverride = backgroundTab === "wallpaper" && unsplashOverrideUrl !== "";
@@ -165,7 +189,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     // SVG element image cache keyed by "svgId-color" — avoids new Image() per frame
     const svgImageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
     // Cursor image cache keyed by data URL — avoids new Image() + decode per frame
-    const cursorImageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
+    // const cursorImageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
     // Actualizar canvas dimensions cuando cambia el aspect ratio
     useEffect(() => {
@@ -512,17 +536,59 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
         ctx.save();
 
         // Apply zoom transform to entire canvas (affects everything including background)
-        if (zoomState.scale !== 1) {
-            const centerX = canvasWidth / 2;
-            const centerY = canvasHeight / 2;
+        const zoomCenterX = canvasWidth / 2;
+        const zoomCenterY = canvasHeight / 2;
 
-            // Calculate focus point offset (relative to entire canvas)
+        if (zoomState.scale !== 1 || zoomState.rotateX !== 0 || zoomState.rotateY !== 0) {
             const focusOffsetX = (50 - zoomState.focusX) / 100 * canvasWidth * (zoomState.scale - 1) * 2;
             const focusOffsetY = (50 - zoomState.focusY) / 100 * canvasHeight * (zoomState.scale - 1) * 2;
 
-            ctx.translate(centerX + focusOffsetX, centerY + focusOffsetY);
+            ctx.translate(zoomCenterX + focusOffsetX, zoomCenterY + focusOffsetY);
+
+            // 3D solo si hay rotación — NO tocar el ctx si no hay 3D
+            if (zoomState.perspective > 0 && (zoomState.rotateX !== 0 || zoomState.rotateY !== 0)) {
+                const rotateXRad = (zoomState.rotateX * Math.PI) / 180;
+                const rotateYRad = (zoomState.rotateY * Math.PI) / 180;
+                const d = zoomState.perspective; // 600px
+
+                // Punto de enfoque en píxeles (origen de la perspectiva)
+                const focusPxX = (zoomState.focusX / 100) * canvasWidth;
+                const focusPxY = (zoomState.focusY / 100) * canvasHeight;
+
+                // Trasladar al punto de enfoque para que la perspectiva parta desde ahí
+                ctx.translate(focusPxX, focusPxY);
+
+                // Perspectiva real usando tangente (igual que CSS perspective)
+                // CSS perspective: un punto a distancia d del plano, rotado θ grados
+                // produce escala = d / (d - z) donde z = dist * sin(θ)
+                const tanY = Math.tan(rotateYRad);
+                const tanX = Math.tan(rotateXRad);
+
+                // Matriz de perspectiva 2D aproximada a CSS perspective + rotateX/Y:
+                // - skewX/Y crean el efecto trapezoidal
+                // - scaleX/Y compensan la profundidad
+                // Valores sin perspectiveFactor para que el efecto sea igual de fuerte
+                const scaleX = 1 / Math.sqrt(1 + tanY * tanY);
+                const scaleY = 1 / Math.sqrt(1 + tanX * tanX);
+                const skewX = tanY * scaleX;
+                const skewY = tanX * scaleY;
+
+                ctx.transform(
+                    scaleX,  // a
+                    skewY,   // b
+                    skewX,   // c  
+                    scaleY,  // d
+                    0,       // e
+                    0        // f
+                );
+
+                // Volver al origen
+                ctx.translate(-focusPxX, -focusPxY);
+            }
+
+            // Zoom siempre se aplica (con o sin 3D)
             ctx.scale(zoomState.scale, zoomState.scale);
-            ctx.translate(-centerX, -centerY);
+            ctx.translate(-zoomCenterX, -zoomCenterY);
         }
 
         const backgroundImage = (shouldShowCustomImage || shouldShowUnsplashOverride) ? customImageRef.current : (shouldShowWallpaper ? wallpaperImageRef.current : null);
@@ -590,17 +656,17 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
         ctx.save();
 
         // Determinar el centro real del contenedor para rotar sobre su propio eje
-        const centerX = containerX + containerWidth / 2;
-        const centerY = containerY + containerHeight / 2;
+        const videoCenterX = containerX + containerWidth / 2;
+        const videoCenterY = containerY + containerHeight / 2;
 
         // Calcular traslación en píxeles basada en el tamaño del contenedor
         const translateXPx = (videoTransform.translateX / 100) * containerWidth;
         const translateYPx = (videoTransform.translateY / 100) * containerHeight;
 
         // Mover el origen al centro, trasladar, rotar, y devolver el origen a la esquina
-        ctx.translate(centerX + translateXPx, centerY + translateYPx);
+        ctx.translate(videoCenterX + translateXPx, videoCenterY + translateYPx);
         ctx.rotate((videoTransform.rotation * Math.PI) / 180);
-        ctx.translate(-centerX, -centerY);
+        ctx.translate(-videoCenterX, -videoCenterY);
 
         // 5. Dibujar sombra del contenedor (ahora rotará y se moverá con todo lo demás)
         if (shadows > 0 && !SELF_SHADOWING_MOCKUPS.includes(mockupId)) {
@@ -644,7 +710,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
             videoY = mockupResult.contentY;
             videoWidth = mockupResult.contentWidth;
             videoHeight = mockupResult.contentHeight;
-            videoRadius = mockupId === "iphone-slim" || mockupId === "glass-curve" || mockupId ==="glass-full" ? scaledRadius * 6 : scaledRadius;
+            videoRadius = mockupId === "iphone-slim" || mockupId === "glass-curve" || mockupId === "glass-full" ? scaledRadius * 6 : scaledRadius;
         }
 
         // 7. Dibujar video con esquinas redondeadas
@@ -683,7 +749,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
         await renderCanvasElements(ctx, canvasElements, canvasWidth, canvasHeight, false);
 
         // 9. Render cursor overlay if enabled and data available
-        if (cursorConfig.visible && cursorConfig.style !== "none" && cursorData.hasCursorData) {
+        /* if (cursorConfig.visible && cursorConfig.style !== "none" && cursorData.hasCursorData) {
             const frameTime = video.currentTime;
             const cursorPos = interpolateCursorPosition(cursorData.keyframes, frameTime, cursorConfig.smoothing);
 
@@ -759,7 +825,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                     ctx.restore();
                 }
             }
-        }
+        }*/
 
         ctx.restore();
     };
@@ -797,173 +863,198 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
             >
                 {/* Zoom container - applies zoom to entire composition (background + video) */}
                 <div
-                    className="absolute inset-0 origin-center"
+                    className="absolute inset-0"
                     style={{
-                        transform: `scale(${zoomTransform.scale}) translate(${zoomTransform.translateX}%, ${zoomTransform.translateY}%)`,
-                        transition: `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
+                        perspective: zoomTransform.perspective > 0 ? `${zoomTransform.perspective}px` : 'none',
+                        perspectiveOrigin: 'center center',
                     }}
                 >
-                    {/* Capa 1: Fondo (siempre llena todo el contenedor) */}
+                    {/* Zoom + translate layer */}
                     <div
-                        className="absolute inset-0 overflow-hidden"
+                        className="absolute inset-0 origin-center"
+                        style={{
+                            transform: `scale(${zoomTransform.scale}) translate(${zoomTransform.translateX}%, ${zoomTransform.translateY}%)`,
+                            transition: zoomTransform.isMoving
+                                ? `transform ${zoomTransform.transitionMs}ms linear`
+                                : `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
+                            transformStyle: 'preserve-3d', // ← mover aquí desde el div hijo
+                        }}
                     >
+                        {/* 3D rotation layer */}
                         <div
-                            className="absolute transition-all duration-200"
+                            className="absolute inset-0 origin-center"
                             style={{
-                                inset: backgroundBlur > 0 ? `-${backgroundBlur}px` : '0',
-                                ...(shouldShowCustomColor && backgroundColorCss
-                                    ? // Color sólido o gradiente CSS
-                                    backgroundColorCss.startsWith('#') || backgroundColorCss.startsWith('rgb')
-                                        ? { backgroundColor: backgroundColorCss }
-                                        : { backgroundImage: backgroundColorCss }
-                                    : (shouldShowCustomImage || shouldShowUnsplashOverride)
-                                        ? // Imagen personalizada o Unsplash override
-                                        {
-                                            backgroundImage: `url('${shouldShowCustomImage ? selectedImageUrl : unsplashOverrideUrl}')`,
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center',
-                                        }
-                                        : shouldShowWallpaper
-                                            ? // Wallpaper
-                                            {
-                                                backgroundImage: `url('${wallpaperUrl}')`,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                            }
-                                            :
-                                            { backgroundColor: 'transparent' }
-                                ),
-                                filter: backgroundBlur > 0 ? `blur(${backgroundBlur * 0.4}px)` : 'none',
+                                transform: zoomTransform.perspective > 0
+                                    ? `rotateX(${zoomTransform.rotateX}deg) rotateY(${zoomTransform.rotateY}deg)`
+                                    : 'none',
+                                transition: `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
+                                // ← quitar transformStyle de aquí
                             }}
-                        />
-                    </div>
-
-                    {/* Capa 2A: Canvas elements BEHIND video (zIndex < VIDEO_Z_INDEX) */}
-                    <CanvasElementsLayer
-                        canvasContainerRef={canvasContainerRef}
-                        canvasElements={canvasElements}
-                        selectedElementId={selectedElementId}
-                        hoveredElementId={hoveredElementId}
-                        isDraggingElement={isDraggingElement}
-                        behindVideo={true}
-                        onElementSelect={onElementSelect}
-                        onElementUpdate={onElementUpdate}
-                        setHoveredElementId={setHoveredElementId}
-                        setIsDraggingElement={setIsDraggingElement}
-                        setIsDraggingElementRotation={setIsDraggingElementRotation}
-                        elementDragStart={elementDragStart}
-                        layerZIndex={1}
-                    />
-
-                    {/* Capa 2B: Video con padding, esquinas redondeadas y sombras */}
-                    <div
-                        className="absolute inset-0 flex items-center justify-center transition-all duration-200"
-                        style={{ padding: `${padding * 0.5}%`, zIndex: 2, pointerEvents: 'none' }}
-                    >
-                        <div
-                            ref={videoContainerRef}
-                            className="relative flex w-full h-full items-center justify-center max-w-full max-h-full"
-                            style={{
-                                transform: `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
-                                cursor: isDraggingVideo ? 'move' : (isVideoHovered && videoUrl ? 'move' : 'default'),
-                                transition: isDraggingVideo || isDraggingRotation ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                pointerEvents: 'auto',
-                            }}
-                            onMouseEnter={() => videoUrl && setIsVideoHovered(true)}
-                            onMouseLeave={() => setIsVideoHovered(false)}
-                            onMouseDown={(e) => {
-                                if (!videoUrl || !onVideoTransformChange) return;
-                                // Only start dragging if not clicking on rotation handle
-                                if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
-
-                                e.preventDefault();
-                                setIsDraggingVideo(true);
-                                dragStartPos.current = {
-                                    x: e.clientX,
-                                    y: e.clientY,
-                                    initialRotation: videoTransform.rotation,
-                                    initialTranslateX: videoTransform.translateX,
-                                    initialTranslateY: videoTransform.translateY,
-                                };
-                            }}
-                            onMouseMove={(e) => { if (videoUrl) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
                         >
-                            <div className="relative">
-                                {/* Rotation handle */}
-                                {isVideoHovered && videoUrl && onVideoTransformChange && (
-                                    <div
-                                        data-rotation-handle style={getCornerStyle(videoHoverCorner, -14)}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            lastAngleRef.current = null;
-                                            setIsDraggingRotation(true);
-                                            dragStartPos.current = {
-                                                x: e.clientX,
-                                                y: e.clientY,
-                                                initialRotation: videoTransform.rotation,
-                                                initialTranslateX: videoTransform.translateX,
-                                                initialTranslateY: videoTransform.translateY,
-                                            };
-                                        }}
-                                    >
-                                        <RotationHandleIcon corner={videoHoverCorner} color="#e5e7eb" />
-                                    </div>
-                                )}
-                                {isVideoHovered && videoUrl && !isDraggingVideo && !isDraggingRotation && (
-                                    <div
-                                        className="absolute -inset-px border border-white pointer-events-none z-10 opacity-80"
-                                        style={{ borderRadius: `${roundedCorners + 1}px` }}
-                                    />
-                                )}
-                                <MockupWrapper
-                                    mockupId={mockupId}
-                                    config={mockupConfig ?? DEFAULT_MOCKUP_CONFIG}
-                                    roundedCorners={roundedCorners}
-                                    shadows={shadows}
-                                >
-                                    {videoUrl ? (
-                                        <div className="relative flex items-center justify-center overflow-hidden max-w-full max-h-full rounded-[inherit]"
-                                        >                                    {/* Video element */}
-                                            <video
-                                                ref={videoRef}
-                                                src={videoUrl}
-                                                preload="auto"
-                                                playsInline
-                                                className="max-w-full max-h-full object-contain"
-                                                style={{
-                                                    // Aplicar crop usando object-view-box (CSS nativo)
-                                                    ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0) ? {
-                                                        objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)`,
-                                                    } : {}),
-                                                    opacity: currentThumbnail ? 0 : 1,
-                                                }}
-                                                onTimeUpdate={onTimeUpdate}
-                                                onLoadedMetadata={onLoadedMetadata}
-                                                onEnded={onEnded}
-                                            />
-
-                                            {currentThumbnail && (
-                                                <img
-                                                    src={currentThumbnail.dataUrl}
-                                                    alt="Preview"
-                                                    crossOrigin="anonymous"
-                                                    className="absolute inset-0 w-full h-full object-contain"
-                                                />
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">                                    <PlaceholderEditor
-                                            onVideoUpload={onVideoUpload}
-                                            isUploading={isUploading}
-                                        />
-                                        </div>
-                                    )}
-                                </MockupWrapper>
+                            {/* Capa 1: Fondo (siempre llena todo el contenedor) */}
+                            <div
+                                className="absolute inset-0 overflow-hidden"
+                            >
+                                <div
+                                    className="absolute transition-all duration-200"
+                                    style={{
+                                        inset: backgroundBlur > 0 ? `-${backgroundBlur}px` : '0',
+                                        ...(shouldShowCustomColor && backgroundColorCss
+                                            ? // Color sólido o gradiente CSS
+                                            backgroundColorCss.startsWith('#') || backgroundColorCss.startsWith('rgb')
+                                                ? { backgroundColor: backgroundColorCss }
+                                                : { backgroundImage: backgroundColorCss }
+                                            : (shouldShowCustomImage || shouldShowUnsplashOverride)
+                                                ? // Imagen personalizada o Unsplash override
+                                                {
+                                                    backgroundImage: `url('${shouldShowCustomImage ? selectedImageUrl : unsplashOverrideUrl}')`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                }
+                                                : shouldShowWallpaper
+                                                    ? // Wallpaper
+                                                    {
+                                                        backgroundImage: `url('${wallpaperUrl}')`,
+                                                        backgroundSize: 'cover',
+                                                        backgroundPosition: 'center',
+                                                    }
+                                                    :
+                                                    { backgroundColor: 'transparent' }
+                                        ),
+                                        filter: backgroundBlur > 0 ? `blur(${backgroundBlur * 0.4}px)` : 'none',
+                                    }}
+                                />
                             </div>
+
+                            {/* Capa 2A: Canvas elements BEHIND video (zIndex < VIDEO_Z_INDEX) */}
+                            <CanvasElementsLayer
+                                canvasContainerRef={canvasContainerRef}
+                                canvasElements={canvasElements}
+                                selectedElementId={selectedElementId}
+                                hoveredElementId={hoveredElementId}
+                                isDraggingElement={isDraggingElement}
+                                behindVideo={true}
+                                onElementSelect={onElementSelect}
+                                onElementUpdate={onElementUpdate}
+                                setHoveredElementId={setHoveredElementId}
+                                setIsDraggingElement={setIsDraggingElement}
+                                setIsDraggingElementRotation={setIsDraggingElementRotation}
+                                elementDragStart={elementDragStart}
+                                layerZIndex={1}
+                            />
+
+                            {/* Capa 2B: Video con padding, esquinas redondeadas y sombras */}
+                            <div
+                                className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+                                style={{ padding: `${padding * 0.5}%`, zIndex: 2, pointerEvents: 'none' }}
+                            >
+                                <div
+                                    ref={videoContainerRef}
+                                    className="relative flex w-full h-full items-center justify-center max-w-full max-h-full"
+                                    style={{
+                                        transform: `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
+                                        cursor: isDraggingVideo ? 'move' : (isVideoHovered && videoUrl ? 'move' : 'default'),
+                                        transition: isDraggingVideo || isDraggingRotation ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                        pointerEvents: 'auto',
+                                    }}
+                                    onMouseEnter={() => videoUrl && setIsVideoHovered(true)}
+                                    onMouseLeave={() => setIsVideoHovered(false)}
+                                    onMouseDown={(e) => {
+                                        if (!videoUrl || !onVideoTransformChange) return;
+                                        // Only start dragging if not clicking on rotation handle
+                                        if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
+
+                                        e.preventDefault();
+                                        setIsDraggingVideo(true);
+                                        dragStartPos.current = {
+                                            x: e.clientX,
+                                            y: e.clientY,
+                                            initialRotation: videoTransform.rotation,
+                                            initialTranslateX: videoTransform.translateX,
+                                            initialTranslateY: videoTransform.translateY,
+                                        };
+                                    }}
+                                    onMouseMove={(e) => { if (videoUrl) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
+                                >
+                                    <div className="relative">
+                                        {/* Rotation handle */}
+                                        {isVideoHovered && videoUrl && onVideoTransformChange && (
+                                            <div
+                                                data-rotation-handle style={getCornerStyle(videoHoverCorner, -14)}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    lastAngleRef.current = null;
+                                                    setIsDraggingRotation(true);
+                                                    dragStartPos.current = {
+                                                        x: e.clientX,
+                                                        y: e.clientY,
+                                                        initialRotation: videoTransform.rotation,
+                                                        initialTranslateX: videoTransform.translateX,
+                                                        initialTranslateY: videoTransform.translateY,
+                                                    };
+                                                }}
+                                            >
+                                                <RotationHandleIcon corner={videoHoverCorner} color="#e5e7eb" />
+                                            </div>
+                                        )}
+                                        {isVideoHovered && videoUrl && !isDraggingVideo && !isDraggingRotation && (
+                                            <div
+                                                className="absolute -inset-px border border-white pointer-events-none z-10 opacity-80"
+                                                style={{ borderRadius: `${roundedCorners + 1}px` }}
+                                            />
+                                        )}
+                                        <MockupWrapper
+                                            mockupId={mockupId}
+                                            config={mockupConfig ?? DEFAULT_MOCKUP_CONFIG}
+                                            roundedCorners={roundedCorners}
+                                            shadows={shadows}
+                                        >
+                                            {videoUrl ? (
+                                                <div className="relative flex items-center justify-center overflow-hidden max-w-full max-h-full rounded-[inherit]"
+                                                >                                    {/* Video element */}
+                                                    <video
+                                                        ref={videoRef}
+                                                        src={videoUrl}
+                                                        preload="auto"
+                                                        playsInline
+                                                        className="max-w-full max-h-full object-contain"
+                                                        style={{
+                                                            // Aplicar crop usando object-view-box (CSS nativo)
+                                                            ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0) ? {
+                                                                objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)`,
+                                                            } : {}),
+                                                            opacity: currentThumbnail ? 0 : 1,
+                                                        }}
+                                                        onTimeUpdate={onTimeUpdate}
+                                                        onLoadedMetadata={onLoadedMetadata}
+                                                        onEnded={onEnded}
+                                                    />
+
+                                                    {currentThumbnail && (
+                                                        <img
+                                                            src={currentThumbnail.dataUrl}
+                                                            alt="Preview"
+                                                            crossOrigin="anonymous"
+                                                            className="absolute inset-0 w-full h-full object-contain"
+                                                        />
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">                                    <PlaceholderEditor
+                                                    onVideoUpload={onVideoUpload}
+                                                    isUploading={isUploading}
+                                                />
+                                                </div>
+                                            )}
+                                        </MockupWrapper>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* End zoom transform div */}
                         </div>
                     </div>
-
+                    {/* End perspective wrapper div */}
                     {/* Capa 3: Canvas elements ABOVE video (zIndex >= VIDEO_Z_INDEX) */}
                     <CanvasElementsLayer
                         canvasContainerRef={canvasContainerRef}
@@ -980,9 +1071,8 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                         elementDragStart={elementDragStart}
                         layerZIndex={3}
                     />
-
                     {/* Capa 4: Cursor overlay for preview */}
-                    {cursorPosition && cursorSvgDataUrl && cursorConfig.visible && cursorConfig.style !== "none" && (
+                    {/* {cursorPosition && cursorSvgDataUrl && cursorConfig.visible && cursorConfig.style !== "none" && (
                         <div
                             className="absolute inset-0 pointer-events-none"
                             style={{
@@ -991,7 +1081,6 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                             }}
                         >
                             <div className="relative w-full h-full">
-                                {/* Click effect */}
                                 {cursorPosition.clicking && cursorConfig.clickEffect !== "none" && (
                                     <div
                                         className="absolute rounded-full animate-ping"
@@ -1006,7 +1095,6 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                                         }}
                                     />
                                 )}
-                                {/* Cursor image */}
                                 <img
                                     src={cursorSvgDataUrl}
                                     alt="cursor"
@@ -1023,258 +1111,9 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                                 />
                             </div>
                         </div>
-                    )}
+                    )} */}
                 </div>
             </div>
         </div>
     );
 });
-
-{/* Canvas Elements Layer Component - renders elements either behind or above video */ }
-function CanvasElementsLayer({
-    canvasContainerRef,
-    canvasElements,
-    selectedElementId,
-    hoveredElementId,
-    isDraggingElement,
-    behindVideo,
-    onElementSelect,
-    onElementUpdate,
-    setHoveredElementId,
-    setIsDraggingElement,
-    setIsDraggingElementRotation,
-    elementDragStart,
-    layerZIndex,
-}: {
-    canvasContainerRef?: React.RefObject<HTMLDivElement | null>;
-    canvasElements: CanvasElement[];
-    selectedElementId: string | null;
-    hoveredElementId: string | null;
-    isDraggingElement: boolean;
-    behindVideo: boolean;
-    onElementSelect?: (id: string | null) => void;
-    onElementUpdate?: (id: string, updates: Partial<CanvasElement>) => void;
-    setHoveredElementId: (id: string | null) => void;
-    setIsDraggingElement: (dragging: boolean) => void;
-    setIsDraggingElementRotation: (dragging: boolean) => void;
-    elementDragStart: React.MutableRefObject<{ x: number; y: number; initialX: number; initialY: number; initialRotation: number }>;
-    layerZIndex: number;
-}) {
-    const layerRef = useRef<HTMLDivElement>(null);
-    const [refSize, setRefSize] = useState(0);
-
-    // Per-element corner tracking: elementId → Corner
-    const [elementCorners, setElementCorners] = useState<Record<string, Corner>>({});
-
-    useEffect(() => {
-        const el = layerRef.current;
-        if (!el) return;
-        const measure = () => {
-            const { width, height } = el.getBoundingClientRect();
-            setRefSize(Math.min(width, height));
-        };
-        measure();
-        const ro = new ResizeObserver(measure);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, []);
-
-    const toPx = (pct: number) => refSize > 0 ? (pct / 100) * refSize : 0;
-
-    const setRefs = useCallback((node: HTMLDivElement | null) => {
-        (layerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        if (canvasContainerRef) {
-            const externalRef = canvasContainerRef as React.MutableRefObject<HTMLDivElement | null>;
-            externalRef.current = node;
-        }
-    }, [canvasContainerRef]);
-
-    const filteredElements = canvasElements.filter(element =>
-        behindVideo ? element.zIndex < VIDEO_Z_INDEX : element.zIndex >= VIDEO_Z_INDEX
-    );
-
-    if (filteredElements.length === 0) {
-        return (
-            <div
-                ref={setRefs}
-                className="absolute inset-0 pointer-events-none"
-                style={{ zIndex: layerZIndex }}
-            />
-        );
-    }
-
-    return (
-        <div
-            ref={setRefs}
-            className="absolute inset-0"
-            onClick={(e) => {
-                if (e.target === e.currentTarget && onElementSelect) onElementSelect(null);
-            }}
-            style={{ zIndex: layerZIndex, pointerEvents: 'none' }}
-        >
-            {[...filteredElements].sort((a, b) => a.zIndex - b.zIndex).map((element) => {
-                const isSelected = selectedElementId === element.id;
-                const isHovered = hoveredElementId === element.id;
-                const activeCorner: Corner = elementCorners[element.id] ?? "top-right";
-
-                const wPx = toPx(element.width);
-                const hPx = toPx(element.height);
-
-                const commonStyle: React.CSSProperties = {
-                    position: "absolute",
-                    left: `${element.x}%`,
-                    top: `${element.y}%`,
-                    width: wPx > 0 ? `${wPx}px` : `${element.width}%`,
-                    height: hPx > 0 ? `${hPx}px` : `${element.height}%`,
-                    transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
-                    zIndex: element.zIndex,
-                    transition: isDraggingElement ? 'none' : 'transform 0.1s ease-out',
-                };
-
-                const handleMouseEnter = () => setHoveredElementId(element.id);
-                const handleMouseLeave = () => setHoveredElementId(null);
-                const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-                    const corner = getNearestCorner(e, element.rotation);
-                    setElementCorners(prev => ({ ...prev, [element.id]: corner }));
-                };
-                const handleMouseDown = (e: React.MouseEvent<HTMLElement>) => {
-                    if (!onElementSelect) return;
-                    if ((e.target as HTMLElement).closest('[data-element-rotation]')) return;
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onElementSelect(element.id);
-                    setIsDraggingElement(true);
-                    elementDragStart.current = {
-                        x: e.clientX,
-                        y: e.clientY,
-                        initialX: element.x,
-                        initialY: element.y,
-                        initialRotation: element.rotation,
-                    };
-                };
-
-                const rotationHandle = isSelected && onElementUpdate ? (
-                    <div
-                        data-element-rotation
-                        style={getCornerStyle(activeCorner, -14)}
-                        onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setIsDraggingElementRotation(true);
-                            elementDragStart.current = {
-                                x: e.clientX,
-                                y: e.clientY,
-                                initialX: element.x,
-                                initialY: element.y,
-                                initialRotation: element.rotation,
-                            };
-                        }}
-                    >
-                        <RotationHandleIcon corner={activeCorner} />
-                    </div>
-                ) : null;
-
-                const selectionBorder = (isSelected || isHovered) ? (
-                    <div
-                        className={`absolute inset-0 border pointer-events-none ${isSelected ? 'border-blue-500' : 'border-white/50'}`}
-                        style={{ borderRadius: '2px' }}
-                    />
-                ) : null;
-
-                if (element.type === "svg") {
-                    const SvgComponent = SVG_COMPONENTS[(element as SvgElement).svgId];
-                    return (
-                        <div
-                            key={element.id}
-                            data-canvas-element
-                            className="pointer-events-auto cursor-move"
-                            style={commonStyle}
-                            onMouseEnter={handleMouseEnter}
-                            onMouseLeave={handleMouseLeave}
-                            onMouseMove={handleMouseMove}
-                            onMouseDown={handleMouseDown}
-                        >
-                            {SvgComponent && (
-                                <div className="w-full h-full" style={{ opacity: element.opacity }}>
-                                    <SvgComponent color={(element as SvgElement).color} className="w-full h-full" />
-                                </div>
-                            )}
-                            {selectionBorder}
-                            {rotationHandle}
-                        </div>
-                    );
-                }
-
-                if (element.type === "image") {
-                    return (
-                        <div
-                            key={element.id}
-                            data-canvas-element
-                            className="pointer-events-auto cursor-move"
-                            style={commonStyle}
-                            onMouseEnter={handleMouseEnter}
-                            onMouseLeave={handleMouseLeave}
-                            onMouseMove={handleMouseMove}
-                            onMouseDown={handleMouseDown}
-                        >
-                            <img
-                                src={(element as ImageElement).imagePath}
-                                alt="Image element"
-                                crossOrigin="anonymous"
-                                className="w-full h-full object-contain rounded"
-                                style={{ pointerEvents: 'none', opacity: element.opacity }}
-                            />
-                            {selectionBorder}
-                            {rotationHandle}
-                        </div>
-                    );
-                }
-
-                if (element.type === "text") {
-                    return (
-                        <div
-                            key={element.id}
-                            data-canvas-element
-                            className="absolute pointer-events-auto cursor-move select-none"
-                            style={{
-                                left: `${element.x}%`,
-                                top: `${element.y}%`,
-                                transform: `translate(-50%, -50%) rotate(${element.rotation}deg)`,
-                                zIndex: element.zIndex,
-                                transition: isDraggingElement ? 'none' : 'transform 0.1s ease-out',
-                            }}
-                            onMouseEnter={handleMouseEnter}
-                            onMouseLeave={handleMouseLeave}
-                            onMouseMove={handleMouseMove}
-                            onMouseDown={handleMouseDown}
-                        >
-                            <div
-                                className="whitespace-nowrap"
-                                style={{
-                                    fontSize: `${element.fontSize}px`,
-                                    fontFamily: element.fontFamily,
-                                    fontWeight: element.fontWeight === 'normal' ? 400 : element.fontWeight === 'medium' ? 500 : 700,
-                                    textAlign: 'center',
-                                    color: element.color,
-                                    pointerEvents: 'none',
-                                    opacity: element.opacity,
-                                }}
-                            >
-                                {element.content}
-                            </div>
-                            {(isSelected || isHovered) && (
-                                <div
-                                    className={`absolute -inset-x-2 -inset-y-1 border pointer-events-none ${isSelected ? 'border-blue-500' : 'border-white/50'}`}
-                                    style={{ borderRadius: '2px' }}
-                                />
-                            )}
-                            {rotationHandle}
-                        </div>
-                    );
-                }
-
-                return null;
-            })}
-        </div>
-    );
-}

@@ -47,7 +47,7 @@ export function drawMockupToCanvas(
 ): MockupDrawResult {
     
     //Importante: todos los cálculos dentro de los mockups se hacen en un espacio de 1280x720 para mantener proporciones, luego se escala al tamaño real del canvas. Esto asegura que el diseño del mockup se mantenga consistente sin importar el tamaño del canvas o sin importar la resolución de exportacion.
-    const scale = canvasWidth / 1280;
+    const scale = (canvasWidth / 1280) * 1.2;
 
     ctx.save();
     ctx.scale(scale, scale);

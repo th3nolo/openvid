@@ -3,14 +3,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { RecordingState, RecordingResult, VideoData } from "@/types";
-import type { CursorKeyframe, CursorRecordingData, CursorState } from "@/types/cursor.types";
-import { EMPTY_CURSOR_DATA, supportsCursorCapture } from "@/types/cursor.types";
+// import type { CursorKeyframe, CursorRecordingData, CursorState } from "@/types/cursor.types";
+// import { EMPTY_CURSOR_DATA, supportsCursorCapture } from "@/types/cursor.types";
 import { clearAllThumbnailCache } from "@/lib/thumbnail-cache";
 
 export type { RecordingState, RecordingResult, VideoData };
 
 // Extend global types for CaptureController (2026 API)
-declare global {
+/* declare global {
   interface CaptureController extends EventTarget {
     oncapturedmousechange: ((event: CapturedMouseEvent) => void) | null;
     setFocusBehavior(behavior: "focus-captured-surface" | "no-focus-change"): void;
@@ -35,7 +35,7 @@ interface ExtendedDisplayMediaOptions {
     displaySurface?: "browser" | "window" | "monitor";
   };
   audio?: boolean | MediaTrackConstraints;
-}
+}*/
 
 function generateVideoId(): string {
   return `vid_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -78,9 +78,9 @@ async function getDB(): Promise<IDBDatabase> {
 }
 
 async function saveVideoToIndexedDB(
-  blob: Blob, 
+  blob: Blob,
   duration: number,
-  cursorData?: CursorRecordingData
+  // cursorData?: CursorRecordingData
 ): Promise<string> {
   try {
     await clearAllThumbnailCache();
@@ -101,7 +101,7 @@ async function saveVideoToIndexedDB(
       duration,
       videoId,
       timestamp: Date.now(),
-      cursorData: cursorData || EMPTY_CURSOR_DATA,
+      // cursorData: cursorData || EMPTY_CURSOR_DATA,
       isRecordedVideo: true, // Flag to identify browser-recorded videos
     };
 
@@ -119,13 +119,13 @@ async function saveVideoToIndexedDB(
   });
 }
 
-export async function loadVideoFromIndexedDB(): Promise<{ 
-  blob: Blob; 
-  duration: number; 
-  url: string; 
-  videoId: string; 
+export async function loadVideoFromIndexedDB(): Promise<{
+  blob: Blob;
+  duration: number;
+  url: string;
+  videoId: string;
   timestamp: number;
-  cursorData?: CursorRecordingData;
+  // cursorData?: CursorRecordingData;
   isRecordedVideo?: boolean;
 } | null> {
   try {
@@ -150,13 +150,13 @@ export async function loadVideoFromIndexedDB(): Promise<{
           const url = URL.createObjectURL(data.blob);
           const videoId = data.videoId || `vid_${data.timestamp || Date.now()}`;
           const timestamp = data.timestamp || Date.now();
-          resolve({ 
-            blob: data.blob, 
-            duration: data.duration, 
-            url, 
-            videoId, 
+          resolve({
+            blob: data.blob,
+            duration: data.duration,
+            url,
+            videoId,
             timestamp,
-            cursorData: data.cursorData || EMPTY_CURSOR_DATA,
+            // cursorData: data.cursorData || EMPTY_CURSOR_DATA,
             isRecordedVideo: data.isRecordedVideo || false,
           });
         } else {
@@ -171,7 +171,7 @@ export async function loadVideoFromIndexedDB(): Promise<{
     });
   } catch (error) {
     console.error("Error al cargar video desde la base de datos:", error);
-    return null; 
+    return null;
   }
 }
 
@@ -227,11 +227,11 @@ export function useScreenRecording() {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cursor capture refs
-  const cursorKeyframesRef = useRef<CursorKeyframe[]>([]);
-  const captureControllerRef = useRef<CaptureController | null>(null);
+  // const cursorKeyframesRef = useRef<CursorKeyframe[]>([]);
+  // const captureControllerRef = useRef<CaptureController | null>(null);
   const videoDimensionsRef = useRef<{ width: number; height: number }>({ width: 1920, height: 1080 });
-  const isClickingRef = useRef<boolean>(false);
-  const lastCursorStateRef = useRef<CursorState>("default");
+  // const isClickingRef = useRef<boolean>(false);
+  // const lastCursorStateRef = useRef<CursorState>("default");
 
   useEffect(() => {
     stateRef.current = state;
@@ -297,7 +297,7 @@ export function useScreenRecording() {
   const startRecording = useCallback((stream: MediaStream) => {
     try {
       chunksRef.current = [];
-      cursorKeyframesRef.current = []; // Reset cursor keyframes
+      // cursorKeyframesRef.current = []; // Reset cursor keyframes
       startTimeRef.current = Date.now();
 
       // Get video dimensions from the stream
@@ -362,24 +362,24 @@ export function useScreenRecording() {
         }
 
         // Clean up capture controller
-        if (captureControllerRef.current) {
-          captureControllerRef.current.oncapturedmousechange = null;
-          captureControllerRef.current = null;
-        }
+        /* if (captureControllerRef.current) {
+           captureControllerRef.current.oncapturedmousechange = null;
+           captureControllerRef.current = null;
+         }*/
 
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         const duration = (Date.now() - startTimeRef.current) / 1000;
 
         // Build cursor recording data
-        const cursorData: CursorRecordingData = {
+        /* const cursorData: CursorRecordingData = {
           keyframes: cursorKeyframesRef.current,
           videoDimensions: videoDimensionsRef.current,
           frameRate: 60,
           hasCursorData: cursorKeyframesRef.current.length > 0,
-        };
+        };*/
 
         try {
-          await saveVideoToIndexedDB(blob, duration, cursorData);
+          await saveVideoToIndexedDB(blob, duration, /* cursorData */);
           router.push("/editor");
         } catch (error) {
           console.error("Error al guardar video:", error);
@@ -410,10 +410,10 @@ export function useScreenRecording() {
       setError(null);
 
       // Check if CaptureController is supported (2026 API for cursor tracking)
-      const hasCaptureController = supportsCursorCapture();
-      let controller: CaptureController | null = null;
+      // const hasCaptureController = supportsCursorCapture();
+      // let controller: CaptureController | null = null;
 
-      if (hasCaptureController && typeof CaptureController !== "undefined") {
+      /* if (hasCaptureController && typeof CaptureController !== "undefined") {
         try {
           controller = new CaptureController();
           captureControllerRef.current = controller;
@@ -433,11 +433,11 @@ export function useScreenRecording() {
 
             // Only add keyframe if position changed significantly (optimization)
             const lastKeyframe = cursorKeyframesRef.current[cursorKeyframesRef.current.length - 1];
-            if (!lastKeyframe || 
-                Math.abs(lastKeyframe.x - x) > 0.1 || 
-                Math.abs(lastKeyframe.y - y) > 0.1 ||
-                lastKeyframe.clicking !== isClickingRef.current) {
-              
+            if (!lastKeyframe ||
+              Math.abs(lastKeyframe.x - x) > 0.1 ||
+              Math.abs(lastKeyframe.y - y) > 0.1 ||
+              lastKeyframe.clicking !== isClickingRef.current) {
+
               cursorKeyframesRef.current.push({
                 time,
                 x,
@@ -454,22 +454,22 @@ export function useScreenRecording() {
           controller = null;
           captureControllerRef.current = null;
         }
-      }
+      }*/
 
       // Build display media options
-      const displayMediaOptions: ExtendedDisplayMediaOptions = {
+      const displayMediaOptions: DisplayMediaStreamOptions /*ExtendedDisplayMediaOptions*/ = {
         video: {
           displaySurface: "browser",
           // Hide native cursor when CaptureController is available
           // so we can draw our custom cursor instead
-          ...(controller ? { cursor: "never" as const } : {}),
+          /* ...(controller ? { cursor: "never" as const } : {}),*/
         },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
         },
         // Attach controller if available
-        ...(controller ? { controller } : {}),
+        /*...(controller ? { controller } : {}),*/
       };
 
       const stream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions as DisplayMediaStreamOptions);
@@ -477,20 +477,20 @@ export function useScreenRecording() {
       streamRef.current = stream;
 
       // Set up click tracking for the captured surface
-      if (controller) {
+      /* if (controller) {
         // Track mouse clicks globally during recording
         const handleMouseDown = () => { isClickingRef.current = true; };
         const handleMouseUp = () => { isClickingRef.current = false; };
-        
+
         document.addEventListener("mousedown", handleMouseDown);
         document.addEventListener("mouseup", handleMouseUp);
-        
+
         // Clean up click listeners when stream ends
         stream.getVideoTracks()[0].addEventListener("ended", () => {
           document.removeEventListener("mousedown", handleMouseDown);
           document.removeEventListener("mouseup", handleMouseUp);
         });
-      }
+      }*/
 
       stream.getVideoTracks()[0].onended = () => {
         if (stateRef.current === "recording") {
@@ -532,12 +532,12 @@ export function useScreenRecording() {
       mediaRecorderRef.current.stop();
     }
     // Clean up capture controller
-    if (captureControllerRef.current) {
+    /* if (captureControllerRef.current) {
       captureControllerRef.current.oncapturedmousechange = null;
       captureControllerRef.current = null;
-    }
+    }*/
     chunksRef.current = [];
-    cursorKeyframesRef.current = [];
+    // cursorKeyframesRef.current = [];
     setState("idle");
     restoreOriginals();
   }, [restoreOriginals]);
