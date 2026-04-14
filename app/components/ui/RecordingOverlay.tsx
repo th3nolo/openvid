@@ -19,8 +19,11 @@ export default function RecordingOverlay() {
 
     if (state === "idle") return null;
 
-    const showFloatingCamera =
-        (isCountdown || isRecording) && cameraStream && cameraConfig?.enabled;
+    // Only show the floating camera during countdown. During recording, the preview
+    // would be captured by the screen share on monitor/tab captures, producing a
+    // duplicate camera in the final video. The camera is still recorded as a
+    // separate track via getUserMedia and composited in the editor.
+    const showFloatingCamera = isCountdown && cameraStream && cameraConfig?.enabled;
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
