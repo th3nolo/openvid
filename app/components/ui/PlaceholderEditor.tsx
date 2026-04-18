@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface PlaceholderEditorProps {
     onVideoUpload?: (file: File) => void;
@@ -8,6 +9,7 @@ interface PlaceholderEditorProps {
 }
 
 export default function PlaceholderEditor({ onVideoUpload, isUploading = false }: PlaceholderEditorProps) {
+    const t = useTranslations('placeholder');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
@@ -85,7 +87,7 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                                 className="size-3 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
                             />
                             <span className="flex-1 text-center text-xs tracking-wide truncate px-3 text-neutral-300">
-                                openvid.dev
+                                {t('browserBar.newTab')}
                             </span>
                             <Icon
                                 icon="material-symbols:star-rounded"
@@ -148,13 +150,13 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                     </div>
                     <div className="space-y-1 mb-6 pointer-events-none">
                         <p className="text-base font-medium text-zinc-200">
-                            {isDragging ? "¡Suelta el video aquí!" : "Haz clic para subir"}
+                            {isDragging ? t('upload.dragging') : t('upload.title')}
                             <span className="font-normal text-zinc-400">
-                                {!isDragging && " o arrastra tu video"}
+                                {!isDragging && ` ${t('upload.subtitle')}`}
                             </span>
                         </p>
                         <p className="text-sm text-zinc-500">
-                            MP4, WebM, MOV o MKV
+                            {t('upload.formats')}
                         </p>
                     </div>
                     <div className="relative z-10">
@@ -167,11 +169,11 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                                 {isUploading ? (
                                     <>
                                         <Icon icon="svg-spinners:ring-resize" width="18" height="18" className="mr-2" />
-                                        <span>Subiendo...</span>
+                                        <span>{t('upload.uploading')}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Seleccionar archivo</span>
+                                        <span>{t('upload.button')}</span>
                                     </>
                                 )}
                             </Button>

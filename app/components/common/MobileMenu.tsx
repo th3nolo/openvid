@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { Icon } from "@iconify/react";
 import { useAuth } from "@/hooks/useAuth";
 import { hasAnyVideo } from "@/lib/video-cache-utils";
 import * as Dialog from "@radix-ui/react-dialog";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function MobileMenu() {
+  const t = useTranslations('header');
   const [isOpen, setIsOpen] = useState(false);
   const [hasCachedVideo, setHasCachedVideo] = useState(false);
   const { user, signOut } = useAuth();
@@ -60,7 +62,7 @@ export function MobileMenu() {
     return (
       <button
         className="md:hidden p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-        aria-label="Cargando menú"
+        aria-label={t('menu')}
       >
         <Icon icon="solar:hamburger-menu-linear" className="w-6 h-6" />
       </button>
@@ -72,7 +74,7 @@ export function MobileMenu() {
       <Dialog.Trigger asChild>
         <button
           className="md:hidden p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-          aria-label="Abrir menú"
+          aria-label={t('menu')}
         >
           <Icon icon="solar:hamburger-menu-linear" className="w-6 h-6" />
         </button>
@@ -84,8 +86,8 @@ export function MobileMenu() {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/5">
             <div className="flex flex-col">
-              <Dialog.Title className="sr-only">Menú</Dialog.Title>
-              <Dialog.Description className="sr-only">Navegación principal</Dialog.Description>
+              <Dialog.Title className="sr-only">{t('menu')}</Dialog.Title>
+              <Dialog.Description className="sr-only">{t('menu')}</Dialog.Description>
 
               <Link href="/" onClick={closeMenu} className="flex items-center gap-2">
                 <Image src="/svg/logo-openvid.svg" alt="Logo" width={32} height={32} />
@@ -95,7 +97,7 @@ export function MobileMenu() {
             <Dialog.Close asChild>
               <button
                 className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                aria-label="Cerrar menú"
+                aria-label={t('menu')}
               >
                 <Icon icon="solar:close-square-linear" className="w-5 h-5" />
               </button>
@@ -109,7 +111,7 @@ export function MobileMenu() {
                 className="flex items-center gap-3 px-4 py-3 text-neutral-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               >
                 <Icon icon="solar:document-text-linear" className="w-5 h-5" />
-                <span>Documentación</span>
+                <span>{t('docs')}</span>
               </Link>
 
               <a
@@ -120,7 +122,7 @@ export function MobileMenu() {
                 className="flex items-center gap-3 px-4 py-3 text-neutral-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               >
                 <Icon icon="mdi:github" className="w-5 h-5" />
-                <span>GitHub</span>
+                <span>{t('github')}</span>
                 <Icon icon="solar:external-link-linear" className="w-4 h-4 ml-auto opacity-50" />
               </a>
 
@@ -131,7 +133,7 @@ export function MobileMenu() {
                   className="flex items-center gap-3 px-4 py-3 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-colors"
                 >
                   <Icon icon="solar:video-frame-cut-2-linear" className="w-5 h-5" />
-                  <span>Ir al editor</span>
+                  <span>{t('editor')}</span>
                 </Link>
               )}
             </div>
@@ -147,12 +149,12 @@ export function MobileMenu() {
                   {isLoggingOut ? (
                     <>
                       <Icon icon="svg-spinners:ring-resize" className="w-5 h-5 animate-spin" />
-                      <span className="font-medium">Cerrando sesión...</span>
+                      <span className="font-medium">{t('loggingOut')}</span>
                     </>
                   ) : (
                     <>
                       <Icon icon="solar:logout-2-linear" className="w-5 h-5" />
-                      <span className="font-medium">Cerrar sesión</span>
+                      <span className="font-medium">{t('logout')}</span>
                     </>
                   )}
                 </button>
@@ -164,7 +166,7 @@ export function MobileMenu() {
                   className="flex items-center gap-3 px-4 py-3"
                 >
                   <Icon icon="solar:login-2-linear" className="w-5 h-5" />
-                  <span>Iniciar sesión</span>
+                  <span>{t('login')}</span>
                 </Link>
               </Button>
 

@@ -980,7 +980,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                             transition: zoomTransform.isMoving
                                 ? `transform ${zoomTransform.transitionMs}ms linear`
                                 : `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
-                            transformStyle: 'preserve-3d', // ← mover aquí desde el div hijo
+                            transformStyle: 'preserve-3d',
                         }}
                     >
                         {/* 3D rotation layer */}
@@ -991,7 +991,6 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                                     ? `rotateX(${zoomTransform.rotateX}deg) rotateY(${zoomTransform.rotateY}deg)`
                                     : 'none',
                                 transition: `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
-                                // ← quitar transformStyle de aquí
                             }}
                         >
                             {/* Capa 1: Fondo (siempre llena todo el contenedor) */}

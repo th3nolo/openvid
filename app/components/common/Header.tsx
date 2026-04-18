@@ -3,12 +3,16 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { hasAnyVideo } from "@/lib/video-cache-utils";
 import { UserMenu } from "./UserMenu";
 import { MobileMenu } from "./MobileMenu";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 export default function Header() {
+  
+const t = useTranslations('header');
   const [isScrolled, setIsScrolled] = useState(false);
   const [hasCachedVideo, setHasCachedVideo] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -61,18 +65,24 @@ export default function Header() {
           <Image src="/svg/openvid.svg" alt="Logo" width={100} height={50} className="hidden sm:flex" style={{ height: "auto" }} />
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
-          <a href="#docs" className="hover:text-white transition-colors">Documentación</a>
-          <a href="https://github.com/CristianOlivera1/openvid" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+        <div className="hidden md:flex items-center gap-8 text-md font-medium text-neutral-400">
+          <a href="#docs" className="hover:text-white transition-colors">{t('docs')}</a>
+          <a href="https://github.com/CristianOlivera1/openvid" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">{t('github')}</a>
           {hasCachedVideo && (
             <Link href="/editor" className="hover:text-white transition-colors">
-              Ir al editor
+              {t('editor')}
             </Link>
           )}
-          <Link href="/donate" target="_blank" className="hover:text-white transition-colors">Donar</Link>
+          <Link href="/donate" target="_blank" className="hover:text-white transition-colors">{t('donate')}</Link>
         </div>
 
         <div className="flex items-center gap-2">
+          {!isMounted ? (
+            <div className="w-25 h-9 rounded-md bg-white/10 animate-pulse border border-white/5"></div>
+          ) : (
+            <LanguageSwitcher />
+          )}
+          
           <div className="block">
             {!isMounted ? (
               <div className="flex items-center gap-2 px-2 py-1">

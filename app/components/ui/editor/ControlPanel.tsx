@@ -8,14 +8,27 @@ import type { ControlPanelProps } from "@/types/control-panel.types";
 import Link from "next/link";
 import Image from "next/image";
 import { lazy, Suspense } from "react";
-import { ElementsMenuSkeleton, ZoomGlobalConfigSkeleton, MockupMenuSkeleton, WallpaperSkeleton, BackgroundColorSkeleton, ImageBackgroundSkeleton, ZoomFragmentEditorSkeleton, AudioMenuSkeleton, VideosMenuSkeleton } from "../Skeleton";
+import { useTranslations } from "next-intl";
+
+import {
+    ElementsMenuSkeleton,
+    ZoomGlobalConfigSkeleton,
+    MockupMenuSkeleton,
+    WallpaperSkeleton,
+    BackgroundColorSkeleton,
+    ImageBackgroundSkeleton,
+    ZoomFragmentEditorSkeleton,
+    AudioMenuSkeleton,
+    VideosMenuSkeleton
+} from "../Skeleton";
+
 import { ElementsMenu } from "./ElementsMenu";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import CursorMenu from "./CursorMenu";
 import { DEFAULT_CURSOR_CONFIG } from "@/types/cursor.types";
 import { CameraMenu } from "./CameraMenu";
 
-// Lazy load heavy components - only load when needed
+// Lazy loads (se mantienen igual)
 const ImageRecentBackgroundGrid = lazy(() => import("../ImageRecentBackgroundGrid").then(mod => ({ default: mod.ImageRecentBackgroundGrid })));
 const BackgroundColorEditor = lazy(() => import("../BackgroundColorEditor").then(mod => ({ default: mod.BackgroundColorEditor })));
 const ZoomFragmentEditor = lazy(() => import("./ZoomFragmentEditor").then(mod => ({ default: mod.ZoomFragmentEditor })));
@@ -64,7 +77,9 @@ export function ControlPanel({
     videoUrl,
     videoThumbnail,
     currentTime = 0,
-    getThumbnailForTime, videoDimensions,    // Mockup props
+    getThumbnailForTime,
+    videoDimensions,
+    // Mockup props
     mockupId,
     mockupConfig,
     onMockupChange,
@@ -108,14 +123,22 @@ export function ControlPanel({
     cameraConfig = null,
     onCameraConfigChange,
 }: ExtendedControlPanelProps) {
+
+    const t = useTranslations("controlPanel");
+
     return (
         <div className="relative w-full sm:w-[320px] h-screen bg-[#141417] border-r border-white/10 flex flex-col shrink-0">
             <header className="flex items-center justify-between h-13 p-2 border-b border-white/10 shrink-0">
-                <Link href="/" onClick={() => { window.location.href = "/"; }} className="flex items-center gap-2 group">
+                <Link
+                    href="/"
+                    onClick={() => { window.location.href = "/"; }}
+                    className="flex items-center gap-2 group"
+                >
                     <Image src="/svg/logo-openvid.svg" alt="Logo" width={30} height={30} />
                     <Image src="/svg/openvid.svg" alt="Logo" width={70} height={50} />
                 </Link>
-                <TooltipAction label="Cerrar panel de control" side="right">
+
+                <TooltipAction label={t("header.close")} side="right">
                     <motion.button
                         onClick={onTogglePanel}
                         className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
@@ -138,22 +161,21 @@ export function ControlPanel({
                         <div className="p-4">
                             <div className="flex items-center gap-2 text-white font-medium mb-4">
                                 <Icon icon="solar:gallery-wide-linear" width="20" />
-                                <span>Fondo</span>
+                                <span>{t("screenshot.background")}</span>
                             </div>
-
                             <div className="flex bg-[#09090B] rounded-lg p-1 text-xs font-medium">
                                 <TabButton
-                                    label="Wallpaper"
+                                    label={t("screenshot.tabs.wallpaper")}
                                     isActive={backgroundTab === "wallpaper"}
                                     onClick={() => onBackgroundTabChange("wallpaper")}
                                 />
                                 <TabButton
-                                    label="Color"
+                                    label={t("screenshot.tabs.color")}
                                     isActive={backgroundTab === "color"}
                                     onClick={() => onBackgroundTabChange("color")}
                                 />
                                 <TabButton
-                                    label="Imagen"
+                                    label={t("screenshot.tabs.image")}
                                     isActive={backgroundTab === "image"}
                                     onClick={() => onBackgroundTabChange("image")}
                                 />
@@ -166,23 +188,22 @@ export function ControlPanel({
                                     <div className="flex flex-col gap-5">
                                         <div>
                                             <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-2 flex items-center gap-1.5">
-                                                <span>Opciones</span>
+                                                <span>{t("screenshot.options")}</span>
                                             </div>
                                             <OptionsGrid
                                                 selectedIndex={selectedWallpaper}
                                                 onSelect={onWallpaperSelect}
                                                 onUnsplashSelect={(url) => {
-                                                    onWallpaperSelect?.(-2); // Deselect catalog wallpapers
+                                                    onWallpaperSelect?.(-2);
                                                     onImageSelect?.(url);
                                                 }}
                                             />
                                         </div>
-
                                         <WallpaperCatalogGrid
                                             selectedIndex={selectedWallpaper}
                                             onSelect={onWallpaperSelect}
                                             onUnsplashSelect={(url) => {
-                                                onWallpaperSelect?.(-2); // Deselect catalog wallpapers
+                                                onWallpaperSelect?.(-2);
                                                 onImageSelect?.(url);
                                             }}
                                         />
@@ -193,7 +214,7 @@ export function ControlPanel({
                             {backgroundTab === "image" && (
                                 <Suspense fallback={<ImageBackgroundSkeleton />}>
                                     <ImageRecentBackgroundGrid
-                                        images={uploadedImages}
+                                        images={uploadedImages?.filter(url => typeof url === 'string' && url.trim() !== "") || []}
                                         selectedUrl={selectedImageUrl}
                                         onSelect={onImageSelect}
                                         onRemove={onImageRemove}
@@ -204,43 +225,37 @@ export function ControlPanel({
 
                             {backgroundTab === "color" && (
                                 <Suspense fallback={<BackgroundColorSkeleton />}>
-                                    <BackgroundColorEditor
-                                        value={backgroundColorConfig}
-                                        onChange={onBackgroundColorChange}
-                                    />
+                                    <BackgroundColorEditor value={backgroundColorConfig} onChange={onBackgroundColorChange} />
                                 </Suspense>
                             )}
 
                             <SliderControl
                                 icon="mdi:blur"
-                                label="Desenfoque del fondo"
+                                label={t("screenshot.sliders.blur")}
                                 value={backgroundBlur}
                                 min={0}
                                 max={20}
                                 onChange={onBackgroundBlurChange}
                             />
-
                             <SliderControl
                                 icon="mdi:arrow-expand-all"
-                                label="Padding"
+                                label={t("screenshot.sliders.padding")}
                                 value={padding}
                                 min={0}
                                 max={20}
                                 onChange={onPaddingChange}
                             />
-
                             <SliderControl
                                 icon="mdi:border-radius"
-                                label="Esquinas redondeadas"
+                                label={t("screenshot.sliders.rounded")}
                                 value={roundedCorners}
                                 min={0}
                                 max={20}
                                 onChange={onRoundedCornersChange}
                             />
-
                             <SliderControl
                                 icon="material-symbols:shadow"
-                                label="Sombras"
+                                label={t("screenshot.sliders.shadows")}
                                 value={shadows}
                                 min={0}
                                 max={20}
@@ -252,12 +267,7 @@ export function ControlPanel({
 
                 {activeTool === "mockup" && (
                     <Suspense fallback={<MockupMenuSkeleton />}>
-                        <MockupMenu
-                            mockupId={mockupId}
-                            mockupConfig={mockupConfig}
-                            onMockupChange={onMockupChange}
-                            onMockupConfigChange={onMockupConfigChange}
-                        />
+                        <MockupMenu mockupId={mockupId} mockupConfig={mockupConfig} onMockupChange={onMockupChange} onMockupConfigChange={onMockupConfigChange} />
                     </Suspense>
                 )}
 
@@ -335,7 +345,7 @@ export function ControlPanel({
                 )}
 
                 {activeTool === "cursor" && (
-                    <Suspense >
+                    <Suspense>
                         <CursorMenu
                             cursorConfig={cursorConfig}
                             onCursorConfigChange={onCursorConfigChange || (() => { })}

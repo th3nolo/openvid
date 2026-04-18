@@ -1,8 +1,11 @@
 "use client";
 import React from 'react';
 import { Icon } from "@iconify/react";
+import { useTranslations } from 'next-intl';
 
 export default function DonationCard() {
+  const t = useTranslations('donation');
+
   return (
     <a 
       href="/donate" 
@@ -19,10 +22,10 @@ export default function DonationCard() {
         
         <div className="flex flex-col">
           <h4 className="text-xl font-medium text-white tracking-tight">
-            Cómprame un café
+            {t('title')}
           </h4>
           <p className="text-sm text-neutral-500 group-hover:text-neutral-400 transition-colors">
-            Apoya al proyecto openvid
+            {t('description')}
           </p>
         </div>
       </div>

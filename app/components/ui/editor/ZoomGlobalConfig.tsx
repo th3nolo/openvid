@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import type { ZoomFragment } from "@/types/zoom.types";
 import { formatZoomTime, zoomLevelToFactor } from "@/types/zoom.types";
@@ -16,20 +17,21 @@ export function ZoomGlobalConfig({
     onSelectFragment,
     onAddFragment,
 }: ZoomGlobalConfigProps) {
+    const t = useTranslations("zoomGlobalConfig");
+
     return (
         <div className="p-4 flex flex-col gap-6">
             <div className="flex items-center">
                 <div className="flex items-center gap-2 text-white font-medium">
                     <Icon icon="iconamoon:zoom-in-bold" width="20" />
-                    <span>Zoom</span>
+                    <span>{t("title")}</span>
                 </div>
             </div>
 
-            {/* Fragment list */}
             {fragments.length > 0 && (
                 <div className="space-y-2">
                     <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">
-                        Fragmentos ({fragments.length})
+                        {t("fragments.title", { count: fragments.length })}
                     </div>
                     <div className="space-y-1.5">
                         {fragments.map((fragment, index) => (
@@ -42,7 +44,9 @@ export function ZoomGlobalConfig({
                                     <Icon icon="iconamoon:zoom-in-bold" width="14" className="text-blue-400" />
                                 </div>
                                 <div className="flex flex-col items-start flex-1 min-w-0">
-                                    <span className="text-xs text-white/80 font-medium">Zoom {index + 1}</span>
+                                    <span className="text-xs text-white/80 font-medium">
+                                        {t("fragments.label", { index: index + 1 })}
+                                    </span>
                                     <span className="text-[10px] text-white/40 font-mono">
                                         {formatZoomTime(fragment.startTime)} - {formatZoomTime(fragment.endTime)}
                                     </span>
@@ -63,22 +67,21 @@ export function ZoomGlobalConfig({
                 onClick={onAddFragment}
             >
                 <Icon icon="ph:plus-bold" width="14" />
-                Añadir fragmento
+                {t("fragments.add")}
             </Button>
 
-            {/* Keyboard shortcuts tip */}
             <div className="text-[10px] text-white/50 space-y-1 pt-2 border-t border-white/10">
                 <div className="flex items-center gap-2">
                     <kbd className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] font-mono">Delete</kbd>
-                    <span>Eliminar fragmento seleccionado</span>
+                    <span>{t("shortcuts.delete")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <kbd className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] font-mono">Esc</kbd>
-                    <span>Deseleccionar fragmento</span>
+                    <span>{t("shortcuts.esc")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <kbd className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] font-mono">Click en track</kbd>
-                    <span>Añadir fragmento en posición</span>
+                    <span>{t("shortcuts.clickTrack")}</span>
                 </div>
             </div>
         </div>
