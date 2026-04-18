@@ -1,29 +1,31 @@
 import { updateSession } from "@/utils/supabase/middleware";
 import { type NextRequest } from "next/server";
+import createIntlMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale } from './i18n';
 
-export async function proxy(request: NextRequest) {
- const response = await updateSession(request);
+const intlMiddleware = createIntlMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed',
+  localeDetection: true
+});
 
-  const country = 
-    request.headers.get('x-vercel-ip-country') || 
-    request.headers.get('cf-ipcountry') || 
-    'UNKNOWN';
+export default async function proxy(request: NextRequest) {
+  const country = request.headers.get('x-vercel-ip-country') || 'UNKNOWN';
 
-  response.headers.set('x-user-country', country);
+  const intlResponse = intlMiddleware(request);
+  intlResponse.headers.set('x-user-country', country);
 
-  return response;
+  const supabaseResponse = await updateSession(request);
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    intlResponse.cookies.set(cookie.name, cookie.value);
+  });
+
+  return intlResponse;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes that don't need auth
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    '/((?!api|ffmpeg|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|avif|webm|wasm|js)$).*)'
   ],
 };
