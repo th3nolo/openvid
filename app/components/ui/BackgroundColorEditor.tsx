@@ -2,13 +2,15 @@
 
 import { Icon } from "@iconify/react";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
-import type {
-    BackgroundColorConfig,
-    GradientConfig,
-    ColorStop,
-    GradientType
+import { useTranslations } from "next-intl";
+import type { BackgroundColorConfig, GradientConfig, ColorStop, GradientType } from "@/types";
+import {
+    gradientToCss,
+    PRESET_SOLID_COLORS,
+    PRESET_LINEAR_GRADIENTS,
+    PRESET_RADIAL_GRADIENTS,
+    PRESET_CONIC_GRADIENTS
 } from "@/types";
-import { gradientToCss, PRESET_SOLID_COLORS, PRESET_LINEAR_GRADIENTS, PRESET_RADIAL_GRADIENTS, PRESET_CONIC_GRADIENTS } from "@/types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 
@@ -23,10 +25,7 @@ function generateStopId() {
 }
 
 function ensureStopIds(stops: ColorStop[]): ColorStop[] {
-    return stops.map(stop => ({
-        ...stop,
-        id: stop.id || generateStopId()
-    }));
+    return stops.map(stop => ({ ...stop, id: stop.id || generateStopId() }));
 }
 
 interface SortableStopListProps {
@@ -43,27 +42,20 @@ function SortableStopList({ stops, onReorder, onColorChange, onPositionChange, o
     const indicatorRef = useRef<HTMLDivElement | null>(null);
     const dragIdxRef = useRef<number>(-1);
     const overIdxRef = useRef<number>(-1);
-    // Snapshot of each item's original top/bottom in the viewport, taken at drag start
-    // before any transforms are applied. Used for hit-testing throughout the drag.
     const originalRectsRef = useRef<{ top: number; bottom: number; mid: number }[]>([]);
     const offsetRef = useRef({ x: 0, y: 0 });
-    const itemHeightRef = useRef(0); // height + gap, measured once
-
+    const itemHeightRef = useRef(0);
     const stopsRef = useRef(stops);
+
     useEffect(() => { stopsRef.current = stops; }, [stops]);
     const onReorderRef = useRef(onReorder);
     useEffect(() => { onReorderRef.current = onReorder; }, [onReorder]);
 
-    const getItemEls = () =>
-        listRef.current
-            ? Array.from(listRef.current.querySelectorAll<HTMLElement>("[data-drag-row]"))
-            : [];
+    const getItemEls = () => listRef.current ? Array.from(listRef.current.querySelectorAll<HTMLElement>("[data-drag-row]")) : [];
 
-    /** Apply CSS transforms directly to DOM — no React state touched */
     const applyVisuals = (dragIdx: number, overIdx: number) => {
         const items = getItemEls();
         const h = itemHeightRef.current;
-
         items.forEach((el, i) => {
             if (i === dragIdx) {
                 el.style.opacity = "0.2";
@@ -80,13 +72,10 @@ function SortableStopList({ stops, onReorder, onColorChange, onPositionChange, o
             el.style.opacity = "1";
         });
 
-        // Indicator line — positioned using original rects (untransformed)
         if (indicatorRef.current && originalRectsRef.current[overIdx]) {
             const orig = originalRectsRef.current[overIdx];
             const listTop = listRef.current!.getBoundingClientRect().top;
-            const lineY = dragIdx <= overIdx
-                ? orig.bottom - listTop
-                : orig.top - listTop;
+            const lineY = dragIdx <= overIdx ? orig.bottom - listTop : orig.top - listTop;
             indicatorRef.current.style.top = `${lineY}px`;
             indicatorRef.current.style.opacity = "1";
         }
@@ -104,176 +93,100 @@ function SortableStopList({ stops, onReorder, onColorChange, onPositionChange, o
     const handlePointerDown = useCallback((e: React.PointerEvent<HTMLElement>, index: number) => {
         if (e.pointerType === "mouse" && e.button !== 0) return;
         e.preventDefault();
-
         const rowEl = (e.currentTarget as HTMLElement).closest<HTMLElement>("[data-drag-row]");
         if (!rowEl) return;
-
         const items = getItemEls();
         originalRectsRef.current = items.map(el => {
             const r = el.getBoundingClientRect();
             return { top: r.top, bottom: r.bottom, mid: r.top + r.height / 2 };
         });
-
         const rect = rowEl.getBoundingClientRect();
-        // height + the actual gap between rows (space-y-1 = 4px)
         itemHeightRef.current = rect.height + 4;
         offsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
         dragIdxRef.current = index;
         overIdxRef.current = index;
-
         const ghost = rowEl.cloneNode(true) as HTMLDivElement;
         Object.assign(ghost.style, {
-            position: "fixed",
-            pointerEvents: "none",
-            zIndex: "9999",
-            width: `${rect.width}px`,
-            height: `${rect.height}px`,
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            opacity: "0.93",
-            transform: "scale(1.02) rotate(0.5deg)",
+            position: "fixed", pointerEvents: "none", zIndex: "9999",
+            width: `${rect.width}px`, height: `${rect.height}px`, left: `${rect.left}px`, top: `${rect.top}px`,
+            opacity: "0.93", transform: "scale(1.02) rotate(0.5deg)",
             boxShadow: "0 16px 48px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.5)",
-            borderRadius: "8px",
-            background: "#1c1c1f",
-            border: "1px solid rgba(255,255,255,0.13)",
-            willChange: "left,top",
+            borderRadius: "8px", background: "#1c1c1f", border: "1px solid rgba(255,255,255,0.13)", willChange: "left,top",
         });
         document.body.appendChild(ghost);
         ghostRef.current = ghost;
-
         const indicator = document.createElement("div");
         Object.assign(indicator.style, {
-            position: "absolute",
-            left: "0",
-            right: "0",
-            height: "2px",
+            position: "absolute", left: "0", right: "0", height: "2px",
             background: "linear-gradient(90deg,transparent 0%,#6366f1 20%,#818cf8 80%,transparent 100%)",
-            borderRadius: "2px",
-            opacity: "0",
-            transition: "top 80ms cubic-bezier(0.25,0.46,0.45,0.94), opacity 60ms ease",
-            zIndex: "10",
-            pointerEvents: "none",
-            marginTop: "-1px",
+            borderRadius: "2px", opacity: "0", transition: "top 80ms cubic-bezier(0.25,0.46,0.45,0.94), opacity 60ms ease",
+            zIndex: "10", pointerEvents: "none", marginTop: "-1px",
         });
         if (listRef.current) {
             listRef.current.style.position = "relative";
             listRef.current.appendChild(indicator);
         }
         indicatorRef.current = indicator;
-
-        // Enable transitions on all rows now that drag has started
-        items.forEach(el => {
-            el.style.transition =
-                "transform 160ms cubic-bezier(0.25,0.46,0.45,0.94), opacity 120ms ease";
-        });
-
+        items.forEach(el => { el.style.transition = "transform 160ms cubic-bezier(0.25,0.46,0.45,0.94), opacity 120ms ease"; });
         applyVisuals(index, index);
 
         const onMove = (mv: PointerEvent) => {
             ghost.style.left = `${mv.clientX - offsetRef.current.x}px`;
             ghost.style.top = `${mv.clientY - offsetRef.current.y}px`;
-
             const origs = originalRectsRef.current;
             let newOver = 0;
-            for (let i = 0; i < origs.length; i++) {
-                if (mv.clientY > origs[i].mid) newOver = i;
-            }
+            for (let i = 0; i < origs.length; i++) { if (mv.clientY > origs[i].mid) newOver = i; }
             newOver = Math.max(0, Math.min(stopsRef.current.length - 1, newOver));
-
             if (newOver !== overIdxRef.current) {
                 overIdxRef.current = newOver;
                 applyVisuals(dragIdxRef.current, newOver);
             }
         };
-
         const onUp = () => {
             document.removeEventListener("pointermove", onMove);
             document.removeEventListener("pointerup", onUp);
-
-            ghost.remove();
-            ghostRef.current = null;
-            indicator.remove();
-            indicatorRef.current = null;
-
-            const from = dragIdxRef.current;
-            const to = overIdxRef.current;
-
+            ghost.remove(); ghostRef.current = null;
+            indicator.remove(); indicatorRef.current = null;
+            const from = dragIdxRef.current; const to = overIdxRef.current;
             if (from !== to) {
                 const items2 = getItemEls();
-                items2.forEach(el => {
-                    el.style.transition = "none";
-                    el.style.transform = "";
-                    el.style.opacity = "";
-                });
-            } else {
-                resetVisuals();
-            }
-
-            if (from !== to) {
-                const cur = stopsRef.current;
-                const next = [...cur];
-                const [moved] = next.splice(from, 1);
-                next.splice(to, 0, moved);
-
+                items2.forEach(el => { el.style.transition = "none"; el.style.transform = ""; el.style.opacity = ""; });
+                const cur = stopsRef.current; const next = [...cur];
+                const [moved] = next.splice(from, 1); next.splice(to, 0, moved);
                 const sortedPositions = [...cur].map(s => s.position).sort((a, b) => a - b);
                 const reordered = next.map((stop, i) => ({ ...stop, position: sortedPositions[i] }));
                 onReorderRef.current(reordered);
-            }
-
-            dragIdxRef.current = -1;
-            overIdxRef.current = -1;
+            } else { resetVisuals(); }
+            dragIdxRef.current = -1; overIdxRef.current = -1;
         };
-
         document.addEventListener("pointermove", onMove);
         document.addEventListener("pointerup", onUp);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
         <>
-            <style>{`
-                [data-drag-row] { will-change: transform; }
-            `}</style>
+            <style>{` [data-drag-row] { will-change: transform; } `}</style>
             <div ref={listRef} className="space-y-1">
                 {stops.map((stop, index) => (
                     <div key={stop.id} data-drag-row>
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/3 hover:bg-white/5 group/row" style={{ transition: "background 150ms" }}>
-                            <div
-                                onPointerDown={(e) => handlePointerDown(e, index)}
-                                className="cursor-grab active:cursor-grabbing p-1 text-white/25 hover:text-white/60 transition-colors touch-none select-none flex-shrink-0"
-                            >
+                            <div onPointerDown={(e) => handlePointerDown(e, index)} className="cursor-grab active:cursor-grabbing p-1 text-white/25 hover:text-white/60 transition-colors touch-none select-none flex-shrink-0" >
                                 <Icon icon="icon-park-outline:drag" width="14" />
                             </div>
-
                             <div className="group/sw w-7 h-7 rounded-md border border-white/20 shrink-0 relative overflow-hidden">
                                 <div className="w-full h-full" style={{ backgroundColor: stop.color }} />
-                                <input
-                                    type="color"
-                                    value={stop.color}
-                                    onChange={(e) => onColorChange(index, e.target.value)}
-                                    className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
-                                />
+                                <input type="color" value={stop.color} onChange={(e) => onColorChange(index, e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/0 group-hover/sw:bg-black/20 transition-colors">
                                     <Icon icon="mdi:eyedropper" className="text-white opacity-0 group-hover/sw:opacity-70 transition-opacity" width="11" />
                                 </div>
                             </div>
-
                             <div className="flex-1 min-w-0 space-y-0.5">
                                 <div className="text-[9px] font-mono text-white/35 uppercase">{stop.color}</div>
-                                <input
-                                    type="range" min="0" max="100" value={stop.position}
-                                    onChange={(e) => onPositionChange(index, parseInt(e.target.value))}
-                                    className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/70"
-                                />
+                                <input type="range" min="0" max="100" value={stop.position} onChange={(e) => onPositionChange(index, parseInt(e.target.value))} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/70" />
                             </div>
-
                             <div className="text-[9px] font-mono text-white/35 w-7 text-right flex-shrink-0">{stop.position}%</div>
-
                             {stops.length > 2 && (
-                                <button
-                                    onClick={() => onRemove(index)}
-                                    className="text-white/20 hover:text-red-400/80 transition-colors flex-shrink-0 p-0.5 rounded"
-                                >
+                                <button onClick={() => onRemove(index)} className="text-white/20 hover:text-red-400/80 transition-colors flex-shrink-0 p-0.5 rounded" >
                                     <Icon icon="mdi:close" width="13" />
                                 </button>
                             )}
@@ -285,16 +198,14 @@ function SortableStopList({ stops, onReorder, onColorChange, onPositionChange, o
     );
 }
 
-
 export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditorProps) {
+    const t = useTranslations("colorEditor"); // Inicializar traducciones
     const [mode, setMode] = useState<"solid" | "gradient">(
         value?.type === "solid" ? "solid" : "gradient"
     );
     const [copied, setCopied] = useState(false);
 
-    const currentSolidColor = value?.type === "solid"
-        ? value.config.color
-        : PRESET_SOLID_COLORS[0];
+    const currentSolidColor = value?.type === "solid" ? value.config.color : PRESET_SOLID_COLORS[0];
 
     const currentGradient: GradientConfig = useMemo(() => {
         if (value?.type === "gradient") {
@@ -331,8 +242,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
             config: {
                 ...gradient,
                 type: currentGradient.type,
-                angle: currentGradient.type === "linear" ? (gradient.angle ?? 135) :
-                    currentGradient.type === "conic" ? (gradient.angle ?? 0) : undefined,
+                angle: currentGradient.type === "linear" ? (gradient.angle ?? 135) : currentGradient.type === "conic" ? (gradient.angle ?? 0) : undefined,
                 stops: ensureStopIds(gradient.stops),
             },
         });
@@ -346,9 +256,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
             newConfig.originX = currentGradient.originX ?? 0;
             newConfig.originY = currentGradient.originY ?? 53;
         } else {
-            delete newConfig.angle;
-            delete newConfig.originX;
-            delete newConfig.originY;
+            delete newConfig.angle; delete newConfig.originX; delete newConfig.originY;
         }
         onChange({ type: "gradient", config: newConfig });
     };
@@ -389,20 +297,20 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                     className={`flex-1 py-1.5 rounded transition ${mode === "gradient" ? "bg-white/10 text-white" : "text-white/60 hover:text-white"}`}
                     onClick={() => { setMode("gradient"); onChange({ type: "gradient", config: currentGradient }); }}
                 >
-                    Gradiente
+                    {t("modes.gradient")}
                 </button>
                 <button
                     className={`flex-1 py-1.5 rounded transition ${mode === "solid" ? "bg-white/10 text-white" : "text-white/60 hover:text-white"}`}
                     onClick={() => { setMode("solid"); onChange({ type: "solid", config: { color: currentSolidColor } }); }}
                 >
-                    Sólido
+                    {t("modes.solid")}
                 </button>
             </div>
 
             {mode === "solid" && (
                 <div className="space-y-4">
                     <div>
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3">Predefinidos</div>
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3">{t("sections.presets")}</div>
                         <div className="grid grid-cols-6 gap-2">
                             {PRESET_SOLID_COLORS.slice(0, 23).map((color) => (
                                 <button
@@ -413,16 +321,10 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                 />
                             ))}
                             <Popover>
-                                <TooltipAction label="Ver más colores">
+                                <TooltipAction label={t("tooltips.moreColors")}>
                                     <PopoverTrigger asChild>
-                                        <button
-                                            className="aspect-square squircle-element border border-dashed border-white/30 bg-white/5 flex items-center justify-center hover:bg-white/10 transition group"
-                                        >
-                                            <Icon
-                                                icon="ph:plus-bold"
-                                                width="16"
-                                                className="text-blue-400 group-hover:text-blue-300 transition-colors"
-                                            />
+                                        <button className="aspect-square squircle-element border border-dashed border-white/30 bg-white/5 flex items-center justify-center hover:bg-white/10 transition group" >
+                                            <Icon icon="ph:plus-bold" width="16" className="text-blue-400 group-hover:text-blue-300 transition-colors" />
                                         </button>
                                     </PopoverTrigger>
                                 </TooltipAction>
@@ -430,7 +332,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                     <div className="flex flex-col bg-[#111113] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
                                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/2">
                                             <Icon icon="mdi:palette" width="14" className="text-white/50" />
-                                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">Más colores</span>
+                                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">{t("sections.moreColors")}</span>
                                             <span className="ml-auto text-[10px] text-white/60">{PRESET_SOLID_COLORS.length} total</span>
                                         </div>
                                         <div className="p-3 grid grid-cols-6 gap-2 max-h-80 overflow-y-auto custom-scrollbar">
@@ -448,8 +350,9 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                             </Popover>
                         </div>
                     </div>
+
                     <div className="bg-[#09090B] rounded-xl border border-white/10 p-3 space-y-3">
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Personalizar</div>
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">{t("sections.customize")}</div>
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 squircle-element border border-white/20 shadow-lg shrink-0 relative overflow-hidden group">
                                 <div className="w-full h-full" style={{ backgroundColor: currentSolidColor }} />
@@ -470,7 +373,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
             {mode === "gradient" && (
                 <div className="space-y-4">
                     <div>
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3">Predefinidos</div>
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3">{t("sections.presets")}</div>
                         <div className="grid grid-cols-6 gap-2">
                             {currentPresetGradients.slice(0, 23).map((gradient, i) => {
                                 const gradientCss = gradientToCss(gradient);
@@ -485,16 +388,10 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                 );
                             })}
                             <Popover>
-                                <TooltipAction label="Ver más gradientes">
+                                <TooltipAction label={t("tooltips.moreGradients")}>
                                     <PopoverTrigger asChild>
-                                        <button
-                                            className="aspect-square squircle-element border border-dashed border-white/30 bg-white/5 flex items-center justify-center hover:bg-white/10 transition group"
-                                        >
-                                            <Icon
-                                                icon="ph:plus-bold"
-                                                width="16"
-                                                className="text-blue-400 group-hover:text-blue-300 transition-colors"
-                                            />
+                                        <button className="aspect-square squircle-element border border-dashed border-white/30 bg-white/5 flex items-center justify-center hover:bg-white/10 transition group" >
+                                            <Icon icon="ph:plus-bold" width="16" className="text-blue-400 group-hover:text-blue-300 transition-colors" />
                                         </button>
                                     </PopoverTrigger>
                                 </TooltipAction>
@@ -502,7 +399,9 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                     <div className="flex flex-col bg-[#111113] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
                                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/2">
                                             <Icon icon="mdi:gradient-horizontal" width="14" className="text-white/50" />
-                                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">Más gradientes {currentGradient.type}</span>
+                                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">
+                                                {t("sections.moreGradients", { type: t(`types.${currentGradient.type}`) })}
+                                            </span>
                                             <span className="ml-auto text-[10px] text-white/60">{currentPresetGradients.length} total</span>
                                         </div>
                                         <div className="p-3 grid grid-cols-6 gap-2 max-h-80 overflow-y-auto custom-scrollbar">
@@ -526,10 +425,9 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                     </div>
 
                     <div className="space-y-4">
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Personalizar</div>
-
+                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">{t("sections.customize")}</div>
                         <div className="space-y-2">
-                            <div className="text-[10px] text-white/60 font-medium">Tipo</div>
+                            <div className="text-[10px] text-white/60 font-medium">{t("sections.type")}</div>
                             <div className="flex gap-2">
                                 {(["linear", "radial", "conic"] as GradientType[]).map((type) => (
                                     <button
@@ -538,7 +436,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                         onClick={() => handleGradientTypeChange(type)}
                                     >
                                         <Icon icon={type === "linear" ? "mdi:gradient-horizontal" : type === "radial" ? "mdi:blur-radial" : "solar:pie-chart-bold"} width="16" />
-                                        <span className="capitalize">{type}</span>
+                                        <span className="capitalize">{t(`types.${type}`)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -547,10 +445,12 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                         {(currentGradient.type === "linear" || currentGradient.type === "conic") && (
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center text-[10px] text-white/60 font-medium">
-                                    <div className="flex items-center gap-1.5"><Icon icon="mdi:rotate-right" width="14" /><span>Ángulo</span></div>
+                                    <div className="flex items-center gap-1.5"><Icon icon="mdi:rotate-right" width="14" /><span>{t("sections.angle")}</span></div>
                                     <span className="font-mono text-white/50 px-2 py-0.5 rounded">{currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)}°</span>
                                 </div>
-                                <input type="range" min="0" max="360" value={currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)}
+                                <input
+                                    type="range" min="0" max="360"
+                                    value={currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)}
                                     onChange={(e) => onChange({ type: "gradient", config: { ...currentGradient, angle: parseInt(e.target.value) } })}
                                     className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[linear-gradient(90deg,#00A3EE,#003780)]"
                                 />
@@ -567,11 +467,12 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                             <div className="flex justify-between items-center text-[10px] text-white/60 font-medium">
                                                 <div className="flex items-center gap-1.5">
                                                     <Icon icon={axis === "X" ? "mdi:arrow-left-right" : "mdi:arrow-up-down"} width="14" />
-                                                    <span>Origen {axis}</span>
+                                                    <span>{t(`sections.origin${axis}`)}</span>
                                                 </div>
                                                 <span className="font-mono text-white/50 px-2 py-0.5 rounded">{val}%</span>
                                             </div>
-                                            <input type="range" min="0" max="100" value={val}
+                                            <input
+                                                type="range" min="0" max="100" value={val}
                                                 onChange={(e) => onChange({ type: "gradient", config: { ...currentGradient, [key]: parseInt(e.target.value) } })}
                                                 className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[linear-gradient(90deg,#00A3EE,#003780)]"
                                             />
@@ -583,14 +484,15 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <div className="text-[10px] text-white/60 font-medium">Colores ({currentGradient.stops.length})</div>
+                                <div className="text-[10px] text-white/60 font-medium">
+                                    {t("sections.stops", { count: currentGradient.stops.length })}
+                                </div>
                                 {currentGradient.stops.length < 5 && (
                                     <button onClick={handleAddStop} className="text-[10px] text-white/50 hover:text-white flex items-center gap-1 transition-colors">
-                                        <Icon icon="mdi:plus" width="12" />Agregar
+                                        <Icon icon="mdi:plus" width="12" />{t("sections.add")}
                                     </button>
                                 )}
                             </div>
-
                             <SortableStopList
                                 stops={currentGradient.stops}
                                 onReorder={handleReorder}

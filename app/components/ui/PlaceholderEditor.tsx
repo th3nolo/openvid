@@ -1,15 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import type { MediaType } from "@/types/editor.types";
 
 interface PlaceholderEditorProps {
     onVideoUpload?: (file: File) => void;
     isUploading?: boolean;
+    mediaType?: MediaType;
 }
 
-export default function PlaceholderEditor({ onVideoUpload, isUploading = false }: PlaceholderEditorProps) {
+export default function PlaceholderEditor({ onVideoUpload, isUploading = false, mediaType = "video" }: PlaceholderEditorProps) {
+    const t = useTranslations('placeholder');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+
+    const isImageMode = mediaType === "image";
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -46,10 +52,18 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
         setIsDragging(false);
 
         const file = e.dataTransfer.files?.[0];
-        if (file && file.type.startsWith("video/") && onVideoUpload) {
+        const isValidFile = isImageMode 
+            ? file?.type.startsWith("image/")
+            : file?.type.startsWith("video/");
+        
+        if (file && isValidFile && onVideoUpload) {
             onVideoUpload(file);
         }
     };
+
+    const acceptedFormats = isImageMode 
+        ? "image/jpeg,image/png,image/webp,image/gif"
+        : "video/mp4,video/webm,video/quicktime,video/x-matroska";
 
     return (
         <>
@@ -85,7 +99,7 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                                 className="size-3 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
                             />
                             <span className="flex-1 text-center text-xs tracking-wide truncate px-3 text-neutral-300">
-                                openvid.dev
+                                {t('browserBar.newTab')}
                             </span>
                             <Icon
                                 icon="material-symbols:star-rounded"
@@ -148,13 +162,15 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                     </div>
                     <div className="space-y-1 mb-6 pointer-events-none">
                         <p className="text-base font-medium text-zinc-200">
-                            {isDragging ? "¡Suelta el video aquí!" : "Haz clic para subir"}
+                            {isDragging 
+                                ? (isImageMode ? t('upload.draggingImage') : t('upload.dragging'))
+                                : (isImageMode ? t('upload.titleImage') : t('upload.title'))}
                             <span className="font-normal text-zinc-400">
-                                {!isDragging && " o arrastra tu video"}
+                                {!isDragging && ` ${isImageMode ? t('upload.subtitleImage') : t('upload.subtitle')}`}
                             </span>
                         </p>
                         <p className="text-sm text-zinc-500">
-                            MP4, WebM, MOV o MKV
+                            {isImageMode ? t('upload.formatsImage') : t('upload.formats')}
                         </p>
                     </div>
                     <div className="relative z-10">
@@ -167,11 +183,11 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                                 {isUploading ? (
                                     <>
                                         <Icon icon="svg-spinners:ring-resize" width="18" height="18" className="mr-2" />
-                                        <span>Subiendo...</span>
+                                        <span>{t('upload.uploading')}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Seleccionar archivo</span>
+                                        <span>{t('upload.button')}</span>
                                     </>
                                 )}
                             </Button>
@@ -181,7 +197,7 @@ export default function PlaceholderEditor({ onVideoUpload, isUploading = false }
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept="video/mp4,video/webm,video/quicktime,video/x-matroska"
+                        accept={acceptedFormats}
                         className="hidden"
                         onChange={handleFileChange}
                     />

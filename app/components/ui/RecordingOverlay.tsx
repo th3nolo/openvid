@@ -2,8 +2,10 @@
 
 import { useRecording } from "@/hooks/RecordingContext";
 import FloatingCameraPreview from "./FloatingCameraPreview";
+import { useTranslations } from "next-intl";
 
 export default function RecordingOverlay() {
+    const t = useTranslations('recording.overlay');
     const {
         state,
         countdown,
@@ -53,10 +55,10 @@ export default function RecordingOverlay() {
 
                         <div className="text-center mt-12 space-y-3">
                             <h2 className="text-3xl font-bold text-white animate-pulse tracking-tight">
-                                ¡Cambia de pestaña ahora!
+                                {t('countdown.title')}
                             </h2>
                             <p className="text-lg text-neutral-400 max-w-sm mx-auto px-4">
-                                La grabación iniciará en la pantalla que seleccionaste.
+                                {t('countdown.subtitle')}
                             </p>
                         </div>
                     </div>
@@ -68,7 +70,7 @@ export default function RecordingOverlay() {
                     <div className="flex items-center gap-4 bg-[#1E1E20] border border-white/10 rounded-full pl-5 pr-2 py-2 shadow-2xl">
                         <div className="flex items-center gap-3 pr-2 border-r border-white/10">
                             <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-sm text-white font-medium">Grabando</span>
+                            <span className="text-sm text-white font-medium">{t('recording.status')}</span>
                             <span className="text-sm text-red-400 font-mono font-bold">
                                 {formatTime(recordingTime)}
                             </span>
@@ -79,7 +81,7 @@ export default function RecordingOverlay() {
                         >
                             <div className="flex items-center gap-2 text-red-400 text-sm font-medium">
                                 <div className="w-3 h-3 bg-red-500 rounded-sm group-hover:scale-110 transition-transform" />
-                                Detener
+                                {t('recording.stop')}
                             </div>
                             <div className="flex items-center gap-1 text-[10px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
                                 <kbd>Alt</kbd>
@@ -102,10 +104,10 @@ export default function RecordingOverlay() {
 
                         <div className="space-y-2">
                             <p className="text-2xl font-semibold text-white tracking-tight">
-                                Procesando video...
+                                {t('processing.title')}
                             </p>
                             <p className="text-neutral-400 font-medium">
-                                Preparando el editor
+                                {t('processing.subtitle')}
                             </p>
                         </div>
                     </div>

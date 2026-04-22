@@ -6,6 +6,7 @@ import type { CanvasElement } from "./canvas-elements.types";
 import type { UploadedAudio, AudioTrack } from "./audio.types";
 import type { CursorConfig, CursorRecordingData } from "./cursor.types";
 import type { CameraConfig } from "./camera.types";
+import type { ImageProjectPreview } from "./image-project.types";
 
 export interface ControlPanelProps {
     activeTool: Tool;
@@ -79,4 +80,12 @@ export interface ControlPanelProps {
     cameraUrl?: string | null;
     cameraConfig?: CameraConfig | null;
     onCameraConfigChange?: (partial: Partial<CameraConfig>) => void;
+    // History/Image projects props
+    imageProjects?: ImageProjectPreview[];
+    currentImageProjectId?: string | null;
+    isLoadingProjects?: boolean;
+    onSelectImageProject?: (projectId: string) => void;
+    onAddImageToCanvas?: (projectId: string) => void;
+    onDeleteImageProject?: (projectId: string) => void;
+    onUploadImageToHistory?: (file: File) => void;
 }

@@ -2,7 +2,7 @@ import type { ZoomFragment } from "./zoom.types";
 import type { CanvasElement } from "./canvas-elements.types";
 import type { CursorConfig, CursorRecordingData } from "./cursor.types";
 
-export type Tool = "screenshot" | "elements" | "audio" | "zoom" | "mockup" | "cursor" | "videos" | "camera";
+export type Tool = "screenshot" | "elements" | "audio" | "zoom" | "mockup" | "cursor" | "videos" | "camera" | "history";
 
 export type BackgroundTab = "wallpaper" | "image" | "color";
 
@@ -44,6 +44,7 @@ export interface EditorState {
 export interface VideoCanvasHandle {
     getExportCanvas: () => HTMLCanvasElement | null;
     drawFrame: () => Promise<void>;
+    getPreviewContainer: () => HTMLDivElement | null;
 }
 
 /** Thumbnail data for scrubbing preview */
@@ -53,7 +54,27 @@ export interface VideoThumbnail {
     quality?: "low" | "high";
 }
 
+export type MediaType = "video" | "image";
+
 export interface VideoCanvasProps {
+    // Media type - determines if we're editing video or image
+    mediaType?: MediaType;
+    // Image-specific props
+    imageUrl?: string | null;
+    imageRef?: React.RefObject<HTMLImageElement | null>;
+    imageTransform?: {
+        id: string;
+        label: string;
+        rotateX: number;
+        rotateY: number;
+        rotateZ: number;
+        translateY: number;
+        scale: number;
+        perspective?: number;
+    };
+    apply3DToBackground?: boolean;
+    imageMaskConfig?: import("@/types/photo.types").ImageMaskConfig;
+    // Video-specific props
     videoRef: React.RefObject<HTMLVideoElement | null>;
     videoUrl: string | null;
     padding: number;
@@ -83,6 +104,8 @@ export interface VideoCanvasProps {
     mockupConfig?: import("./mockup.types").MockupConfig;
     // Video upload props
     onVideoUpload?: (file: File) => void;
+    onImageUpload?: (file: File) => void;
+    onImageDrop?: (files: FileList | File[]) => void;
     isUploading?: boolean;
     // Transform props
     videoTransform?: VideoTransform;

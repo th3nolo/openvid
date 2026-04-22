@@ -1,3 +1,4 @@
+import { CropArea } from "./editor.types";
 import type { VideoTrackClip } from "./video-track.types";
 
 export type ExportQuality = "4k" | "2k" | "1080p" | "720p" | "480p" | "gif" | "webm-alpha";
@@ -13,8 +14,6 @@ export interface ExportSettings {
     trim?: TrimSettings;
     transparentBackground?: boolean;
     muteOriginalAudio?: boolean;
-    /** Whether the source video file actually contains an audio stream.
-     * When false, FFmpeg audio mixing is skipped entirely even if muteOriginalAudio is false. */
     videoHasAudioTrack?: boolean;
     audioTracks?: Array<{
         audioUrl: string;
@@ -54,3 +53,19 @@ export interface VideoLoadResult {
     duration: number;
     url: string;
 }
+
+export interface VideoCropperModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    videoUrl: string | null;
+    onCropApply: (crop: CropArea) => void;
+    initialCrop?: CropArea;
+}
+export const CROP_ASPECT_RATIOS = [
+    { label: "Libre", value: null },
+    { label: "16:9", value: 16 / 9 },
+    { label: "9:16", value: 9 / 16 },
+    { label: "1:1", value: 1 },
+    { label: "4:3", value: 4 / 3 },
+    { label: "3:4", value: 3 / 4 },
+] as const;

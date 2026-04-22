@@ -83,7 +83,6 @@
   --sidebar-ring: oklch(0.708 0 0);
   --gradient-primary: linear-gradient(90deg, #00A3EE, #00A3FF, #003780);
   --gradient-radial-primary: radial-gradient(circle, #002940, #00131E, #000910);
-
 }
 
 .dark {
@@ -290,4 +289,11 @@ button {
 
 .atropos-highlight {
   border-radius: 1rem;
+}
+
+.text-mask {
+  font-size: 15vw;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: middle;
 }

@@ -1,41 +1,4 @@
 import type { Metadata } from "next";
-import { Inter, Roboto, Poppins, Montserrat, DM_Sans } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip"
-import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-roboto",
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-poppins",
-});
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-montserrat",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-dm-sans",
-});
 
 export const metadata: Metadata = {
   title: "openvid - Crea demos profesionales",
@@ -107,18 +70,6 @@ export const viewport = {
   themeColor: "#050505",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="es">
-      <body className={`${inter.variable} ${roboto.variable} ${poppins.variable} ${montserrat.variable} ${dmSans.variable} ${inter.className} antialiased dark`}>
-        <TooltipProvider delayDuration={200}>
-          {children}
-        </TooltipProvider>
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

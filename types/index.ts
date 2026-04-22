@@ -7,3 +7,4 @@ export * from './mockup.types';
 export * from './audio.types';
 export * from './cursor.types';
 export * from './camera.types';
+export * from './image-project.types';

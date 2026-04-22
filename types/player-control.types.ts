@@ -17,3 +17,7 @@ export interface PlayerControlsProps {
     onOpenCropper: () => void;
     onZoomChange: (zoom: number) => void;
 }
+
+export const MIN_ZOOM = 1;
+export const MAX_ZOOM = 10;
+export const ZOOM_STEP = 1;

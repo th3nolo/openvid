@@ -1,25 +1,21 @@
 export interface AudioTrack {
     id: string;
-    audioId: string; // Reference to uploaded audio file
+    audioId: string;
     name: string;
-    startTime: number; // Start position in video timeline (seconds)
-    duration: number; // Duration of the audio clip (seconds)
-    volume: number; // 0 to 1
-    loop: boolean; // Whether to loop if audio is shorter than video
-    trimStart?: number;  // ← ¿existe este campo?
+    startTime: number;
+    duration: number;
+    volume: number;
+    loop: boolean;
+    trimStart?: number; 
 }
 
-/**
- * Uploaded Audio File
- * Represents an audio file available in the library
- */
 export interface UploadedAudio {
     id: string;
     name: string;
-    url: string; // Blob URL or uploaded URL
+    url: string;
     duration: number;
-    fileSize: number; // In bytes
-    mimeType: string; // e.g., "audio/mp3", "audio/wav"
+    fileSize: number;
+    mimeType: string;
 }
 
 export interface AudioConfig {
@@ -35,7 +31,7 @@ export const DEFAULT_AUDIO_CONFIG: AudioConfig = {
 };
 
 export const SUPPORTED_AUDIO_FORMATS = [
-    'audio/mpeg', // MP3
+    'audio/mpeg',
     'audio/mp3',
     'audio/wav',
     'audio/wave',
@@ -57,3 +53,33 @@ export const SUPPORTED_AUDIO_EXTENSIONS = [
 export const MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024;
 
 export const MAX_AUDIO_TRACKS = 5;
+
+export interface AudioMenuProps {
+    audioTracks: AudioTrack[];
+    uploadedAudios: UploadedAudio[];
+    muteOriginalAudio: boolean;
+    masterVolume: number;
+    videoDuration: number;
+    onAudioUpload: (file: File) => void;
+    onUpdateAudioTrack: (trackId: string, updates: Partial<AudioTrack>) => void;
+    onDeleteAudioTrack: (trackId: string) => void;
+    onToggleMuteOriginalAudio: () => void;
+    onMasterVolumeChange: (volume: number) => void;
+}
+
+export const MIN_FRAGMENT_DURATION = 0.1;
+export const MIN_VISUAL_WIDTH_PX = 50;
+
+export interface AudioFragmentTrackItemProps {
+    track: AudioTrack;
+    audio: UploadedAudio | undefined;
+    isSelected: boolean;
+    contentWidth: number;
+    videoDuration: number;
+    otherTracks: AudioTrack[];
+    onSelect: () => void;
+    onUpdate: (updates: Partial<AudioTrack>) => void;
+    onDragStateChange?: (isDragging: boolean) => void;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
+}

@@ -35,7 +35,7 @@ export const SidebarTool = forwardRef<HTMLButtonElement, SidebarToolProps>(
             clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => {
                 setIsOpen(true);
-            }, 800);
+            }, 700);
         };
 
         const handleMouseLeave = () => {

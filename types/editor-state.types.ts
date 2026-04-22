@@ -3,6 +3,13 @@ import type { TrimRange } from "@/types/timeline.types";
 import type { MockupConfig } from "@/types/mockup.types";
 import type { CanvasElement } from "@/types/canvas-elements.types";
 import type { CameraConfig } from "@/types/camera.types";
+import type { Preview3DConfig, ImageMaskConfig } from "@/types/photo.types";
+
+export interface VideoTransform {
+    rotation: number;
+    translateX: number;
+    translateY: number;
+}
 
 export interface EditorState {
     backgroundTab: BackgroundTab;
@@ -31,6 +38,12 @@ export interface EditorState {
     masterVolume: number;
 
     cameraConfig: CameraConfig | null;
+    
+    // Photo mode specific states
+    videoTransform: VideoTransform;
+    imageTransform: Preview3DConfig;
+    apply3DToBackground: boolean;
+    imageMaskConfig: ImageMaskConfig;
 }
 
 export function createInitialEditorState(overrides?: Partial<EditorState>): EditorState {
@@ -62,6 +75,25 @@ export function createInitialEditorState(overrides?: Partial<EditorState>): Edit
         muteOriginalAudio: false,
         masterVolume: 1,
         cameraConfig: null,
+        videoTransform: {
+            rotation: 0,
+            translateX: 0,
+            translateY: 0,
+        },
+        imageTransform: {
+            id: "front",
+            label: "Front",
+            rotateX: 0,
+            rotateY: 0,
+            rotateZ: 0,
+            translateY: 0,
+            scale: 0.9,
+            perspective: 600,
+        },
+        apply3DToBackground: false,
+        imageMaskConfig: {
+            enabled: false,
+        },
         ...overrides,
     };
 }

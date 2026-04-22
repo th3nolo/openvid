@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,8 +6,10 @@ import { Icon } from "@iconify/react";
 import { useAuth } from "@/hooks/useAuth";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function UserMenu() {
+  const t = useTranslations('userMenu');
   const { user, profile, signOut, loading } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -38,9 +39,9 @@ export function UserMenu() {
         <Button variant="primary" asChild>
           <Link
             href="/login"
-            className="text-sm font-medium text-white hover:text-white/90 transition-colors"
+            className="text-md font-medium text-white hover:text-white/90 transition-colors"
           >
-            Iniciar sesión
+            {t('login')}
           </Link>
         </Button>
       </div>
@@ -48,21 +49,8 @@ export function UserMenu() {
   }
 
   const meta = user.user_metadata || {};
-  
-  const displayName = 
-    profile?.first_name || 
-    profile?.full_name || 
-    meta.full_name || 
-    meta.name || 
-    user.email?.split("@")[0] || 
-    "Usuario";
-
-  const avatarUrl = 
-    profile?.avatar_url || 
-    meta.avatar_url || 
-    meta.picture || 
-    `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
-
+  const displayName = profile?.first_name || profile?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || t('defaultUser');
+  const avatarUrl = profile?.avatar_url || meta.avatar_url || meta.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
   const provider = profile?.provider || meta.provider || "email";
 
   return (
@@ -70,24 +58,15 @@ export function UserMenu() {
       <DropdownMenu.Trigger asChild>
         <button
           className="flex items-center gap-2 sm:gap-3 p-1 sm:p-1.5 rounded-full hover:bg-white/5 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          aria-label="Menú de usuario"
+          aria-label={t('ariaLabel')}
         >
           <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-white/10 hover:border-white/30 transition-colors">
-            <Image
-              src={avatarUrl}
-              alt={displayName}
-              fill
-              sizes="36px"
-              className="object-cover"
-            />
+            <Image src={avatarUrl} alt={displayName} fill sizes="36px" className="object-cover" />
           </div>
           <span className="hidden sm:block text-sm font-medium text-neutral-300 max-w-30 truncate">
             {displayName}
           </span>
-          <Icon
-            icon="solar:alt-arrow-down-linear"
-            className="hidden sm:block size-4 text-neutral-400"
-          />
+          <Icon icon="solar:alt-arrow-down-linear" className="hidden sm:block size-4 text-neutral-400" />
         </button>
       </DropdownMenu.Trigger>
 
@@ -101,7 +80,7 @@ export function UserMenu() {
             <p className="text-sm font-medium text-white truncate">{displayName}</p>
             <p className="text-xs text-neutral-400 truncate">{user.email}</p>
             <p className="text-xs text-neutral-500 mt-1 capitalize">
-              Conectado con {provider}
+              {t('connectedWith', { provider })}
             </p>
           </div>
 
@@ -111,7 +90,7 @@ export function UserMenu() {
               className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer outline-none"
             >
               <Icon icon="hugeicons:home-11" className="size-4" />
-              Inicio
+              {t('home')}
             </Link>
           </DropdownMenu.Item>
 
@@ -121,7 +100,7 @@ export function UserMenu() {
               className="flex items-center gap-3 px-3 py-2 text-sm text-neutral-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer outline-none"
             >
               <Icon icon="solar:video-frame-cut-2-linear" className="size-4" />
-              <span>Editor</span>
+              <span>{t('editor')}</span>
             </Link>
           </DropdownMenu.Item>
 
@@ -135,12 +114,12 @@ export function UserMenu() {
             {isLoggingOut ? (
               <>
                 <Icon icon="svg-spinners:ring-resize" className="size-4" />
-                <span>Cerrando sesión...</span>
+                <span>{t('loggingOut')}</span>
               </>
             ) : (
               <>
                 <Icon icon="solar:logout-2-linear" className="size-4" />
-                <span>Cerrar sesión</span>
+                <span>{t('logout')}</span>
               </>
             )}
           </DropdownMenu.Item>
