@@ -1,154 +1,171 @@
 <div align="center">
 <img width="50%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid.svg" />
 
-### Crea demos profesionales en segundos, directamente en tu navegador
+### Create professional demos and mockups in seconds, directly in your browser
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 
-**Graba tu pantalla o sube un video, añade zooms suaves, mockups de dispositivo y fondos personalizados - exporta un demo cinematográfico listo para compartir.**
+**Record your screen or upload a video, add smooth zooms, device mockups, 3D effects, and custom backgrounds - export a cinematic demo ready to share.**
 
-[Demo en vivo](https://openvid.dev) · [Funcionalidades](#-funcionalidades) · [Instalación](#-inicio-rápido) · [Comunidad en Discord](https://discord.gg/f8KEyceS)
+[Live Demo](https://openvid.dev) · [Features](#-features) · [Installation](#-quick-start) · [Discord Community](https://discord.gg/f8KEyceS)
 
 </div>
 
-> **El siguiente demo fue grabado y editado completamente con openvid.**
+> **The following demo was fully recorded and edited using openvid.**
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/7f5219db-c8e4-4143-a3d7-81e2bde24239" width="100%">
-    Tu navegador no admite el elemento de video.
+    Your browser does not support the video tag.
   </video>
 </div>
 
 ---
 
-## Funcionalidades
+## Features
 
-### Entrada de video
-- **Grabación de pantalla** - Captura tu pantalla directamente en el navegador sin instalar nada
-- **Sube tu video** - MP4, WebM, QuickTime y MKV
-- **Arrastrar y soltar** - Carga rápida por drag & drop
+### Video Input
+- **Screen recording** - Capture your screen directly in the browser with no installation required
+- **Upload your video** - MP4, WebM, QuickTime, and MKV
+- **Drag & drop** - Fast file upload
 
-### Personalización visual
+---
 
-**Fondos**
-- Más de 100 fondos prediseñados
-- Imagen personalizada o desde Unsplash
-- Colores sólidos y degradados
-- Efecto blur (0–100%)
+### Mockup Creation
+- **Mockups applied to images**
+- **3D transformations**
+- **Image masking (Mask Image)** for advanced cutouts
+- Scale, rotation, perspective, and position adjustments
 
-**Efectos**
-- Padding dinámico
-- Esquinas redondeadas
-- Sombras
-- Rotación y posicionamiento del video
+---
 
-### Canvas y elementos
-- **Figuras** - Rectángulos, círculos, triángulos
-- **Texto** - Fuentes, colores y tamaños personalizados
-- **SVG** - Importa gráficos vectoriales
-- **Imágenes** - PNG, JPG, WebP como overlay
-- **Capas** - Control de profundidad detrás o encima del video
+### Visual Customization
 
-### Mockups de dispositivo
-Dale contexto a tu demo con marcos profesionales:
+**Backgrounds**
+- 100+ pre-designed backgrounds
+- Custom images or Unsplash
+- Solid colors and gradients
+- Blur effect (0–100%)
+
+**Effects**
+- Dynamic padding
+- Rounded corners
+- Shadows
+- Video rotation and positioning
+
+---
+
+### Canvas & Elements
+- **Shapes** - Rectangles, circles, triangles
+- **Text** - Custom fonts, colors, and sizes
+- **SVG** - Import vector graphics
+- **Images** - PNG, JPG, WebP overlays
+- **Layers** - Depth control above or below the video
+
+---
+
+### Device Mockups
+Add context to your demo with professional frames:
 - Safari (macOS)
 - Chrome
 - Arc
 - Samsung
 
+---
+
 ### Zoom
-- Zoom en/out en momentos exactos del video
-- Control de velocidad y suavizado de la transición
-- **Movimiento de Cámara 3D** - Inclinación (Tilt) y rotación dinámica basada en puntos de interés.
-- **Perspectiva Ajustable** - Control total sobre los ejes X e Y para simular profundidad espacial.
+- Zoom in/out at specific timeline moments
+- Speed and easing control
+- **3D Camera Movement** - Tilt and dynamic rotation based on points of interest
+- **Adjustable Perspective** - Full control over X and Y axes for depth simulation
+
+---
 
 ### Audio
-- Multipista - añade música o efectos de sonido
-- Control de volumen por pista y maestro
-- Recorte automático según duración del video
-- Silenciar/activar audio original del video
+- Multi-track support
+- Per-track and master volume control
+- Auto-trim based on video duration
+- Toggle original video audio
 
-### Herramientas de edición
-- Scrubbing cuadro a cuadro en la línea de tiempo
-- Recorte de inicio y fin
-- Herramienta de crop
-- Proporciones: Auto, 16:9, 9:16, 1:1, 4:3 y personalizado
+---
 
-### Exportación
+### Export
 
-**Calidad**
+**Quality**
 - 4K (3840×2160) @ 30fps
 - 2K (2560×1440) @ 30fps
 - 1080p (1920×1080) @ 30fps
 - 720p (1280×720) @ 30fps
 - 480p (720×480) @ 24fps
 
-**Formato**
+**Format**
 - MP4 (H.264)
-- WebM (VP9) con soporte de fondo transparente
+- WebM (VP9 with transparent background support)
 - GIF
+- PNG, WEBP, JPG, AVIF
 
 ---
 
-## Autenticación
+## Authentication
 
-Impulsado por **Supabase Auth** con soporte OAuth:
+Powered by **Supabase Auth** with OAuth support:
 
 <div align="center">
 
-| Proveedor | Estado |
-|:---------:|:------:|
-| Google    | ✅ Soportado |
-| GitHub    | ✅ Soportado |
-| Twitch    | ✅ Soportado |
+| Provider | Status |
+|:--------:|:------:|
+| Google   | ✅ Supported |
+| GitHub   | ✅ Supported |
+| Twitch   | ✅ Supported |
 
 </div>
 
 ---
 
-## Tecnología
+## Technology
 
-**Procesamiento de video**
-- FFmpeg.wasm - renderizado completamente en el navegador
-- Canvas API - vista previa en tiempo real
-- MediaBunny - pipeline de video optimizado
+**Video Processing**
+- FFmpeg.wasm - fully in-browser rendering
+- Canvas API - preview
+- MediaBunny - optimized video pipeline
+- Three.js - 3D effects
+- HTML to Image - mockup export
 
-**Almacenamiento**
-- IndexedDB - videos grabados localmente
-- LocalStorage - configuraciones del usuario
-- Supabase Storage - copias en la nube (próximamente)
+**Storage**
+- IndexedDB - locally recorded videos
+- LocalStorage - user settings
+- Supabase Storage - cloud backups (coming soon)
 
 **UI/UX**
-- Radix UI - componentes accesibles
-- Framer Motion - animaciones
-- Tailwind CSS 4 - estilos
+- Radix UI - accessible components
+- Framer Motion - animations
+- Tailwind CSS 4 - styling
 
 ---
 
-## Inicio rápido
+## Quick Start
 ```bash
-# Instalar dependencias
+# Install dependencies
 pnpm install
 
-# Configurar entorno
+# Setup environment
 cp .env.example .env
-# Agrega tus credenciales de Supabase
+# Add your Supabase credentials
 
-# Iniciar servidor de desarrollo
+# Start development server
 pnpm dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 💬 Comunidad
-¡Cualquier contribución es bienvenida! Únete a nuestro servidor de **Discord** para coordinar ideas:
-[Únete a Discord](https://discord.gg/f8KEyceS)
+## 💬 Community
+¡Contributions are welcome! Join our **Discord** to collaborate:
+[Join Discord](https://discord.gg/f8KEyceS)
 
-## Contribuidores
+## Contributors
 <a href="https://github.com/CristianOlivera1/openvid/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=CristianOlivera1/openvid" />
 </a>
