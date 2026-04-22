@@ -698,11 +698,6 @@
       "fragmentDuration": "Duración del fragmento",
       "zoomFactor": "Factor de zoom",
       "transitionDuration": "Duración de transición"
-    },
-    "effect3d": {
-      "intensity": "Intensidad",
-      "direction": "Dirección de perspectiva",
-      "directionHint": "Click para elegir dirección de inclinación"
     }
   },
   "zoomGlobalConfig": {
@@ -877,6 +872,61 @@
     "cropper": {
       "button": "Recortar imagen",
       "tooltip": "Ajustar dimensiones y recorte"
+    },
+    "photoPreview": {
+      "custom": {
+        "label": "Personalizado",
+        "customize": "Personalizar",
+        "title": "Ajustes 3D",
+        "perspective": "Perspectiva",
+        "scale": "Escala",
+        "rotationXY": "Rotación (X/Y)",
+        "rotationZ": "Rotación Z",
+        "vertical": "Vertical",
+        "reset": "Restablecer"
+      },
+      "settings": "Ajustes",
+      "apply3D": "Aplicar efecto 3D",
+      "mockup3D": "3D: Mockup",
+      "resetDefaults": "Restablecer valores predeterminados",
+      "reset": "Restablecer",
+      "configs": {
+        "front": "Frontal",
+        "tilt-up": "Inclinado Arriba",
+        "tilt-down": "Inclinado Abajo",
+        "top-left-angle": "Ang. Sup. Izquierdo",
+        "top-right-angle": "Ang. Sup. Derecho",
+        "bottom-left-angle": "Ang. Inf. Izquierdo",
+        "bottom-right-angle": "Ang. Inf. Derecho",
+        "isometric": "Isométrico"
+      }
+    },
+    "imageMask": {
+      "trigger": "Máscara",
+      "tooltip": "Efecto máscara de imagen",
+      "title": "Efectos de Máscara",
+      "tabs": {
+        "presets": "Preestablecido",
+        "custom": "Personalizado"
+      },
+      "presets": {
+        "none": "Sin máscara",
+        "fade-top": "Desvanecer Arriba",
+        "fade-bottom": "Desvanecer Abajo",
+        "fade-sides": "Desvanecer Lados",
+        "vignette": "Viñeta",
+        "angle-45": "Diagonal 45°"
+      },
+      "controls": {
+        "top": "Arriba",
+        "bottom": "Abajo",
+        "left": "Izquierda",
+        "right": "Derecha",
+        "add": "Añadir",
+        "remove": "Quitar",
+        "from": "Desde",
+        "to": "Hasta"
+      }
     }
   },
   "historyMenu": {
@@ -935,7 +985,9 @@
       "custom": "Personalizado",
       "youtube": "YouTube",
       "tiktok": "TikTok",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "portrait": "Retrato",
+      "standard": "Estándar"
     },
     "customSection": {
       "title": "Personalizado",

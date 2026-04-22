@@ -11,26 +11,15 @@ export interface Preview3DConfig {
   perspective?: number;
 }
 
-// Configuraciones 3D estáticas e inmutables para los previews
-// Estas configuraciones NUNCA deben cambiar, independientemente del estado del canvas
 export const PREVIEW_CONFIGS: readonly Preview3DConfig[] = Object.freeze([
   Object.freeze({ id: "front", label: "Front", rotateX: 0, rotateY: 0, rotateZ: 0, translateY: 0, scale: 0.9, perspective: 600 }),
-  Object.freeze({ id: "tilt-up", label: "Tilt Up", rotateX: 15, rotateY: 0, rotateZ: 0, translateY: -2, scale: 0.88, perspective: 500 }),
   Object.freeze({ id: "top-left-angle", label: "Top Left Angle", rotateX: 18, rotateY: 25, rotateZ: -15, translateY: -10, scale: 0.95, perspective: 500 }),
   Object.freeze({ id: "top-right-angle", label: "Top Right Angle", rotateX: 18, rotateY: -22, rotateZ: 15, translateY: 5, scale: 0.95, perspective: 500 }),
+  Object.freeze({ id: "bottom-left-angle", label: "Bottom Left Angle", rotateX: -18, rotateY: 25, rotateZ: 15, translateY: -5, scale: 0.95, perspective: 500 }),
+  Object.freeze({ id: "bottom-right-angle", label: "Bottom Right Angle", rotateX: -18, rotateY: -22, rotateZ: -15, translateY: -5, scale: 0.95, perspective: 500 }),
+  Object.freeze({ id: "isometric", label: "Isometric", rotateX: 35, rotateY: -45, rotateZ: 10, translateY: 0, scale: 0.85, perspective: 1000 }), Object.freeze({ id: "tilt-up", label: "Tilt Up", rotateX: 15, rotateY: 0, rotateZ: 0, translateY: -2, scale: 0.88, perspective: 500 }),
+  Object.freeze({ id: "tilt-down", label: "Tilt Down", rotateX: -15, rotateY: 0, rotateZ: 0, translateY: 2, scale: 0.88, perspective: 500 }),
 ]);
-
-// Configuración estática para previews de mask (siempre en posición frontal)
-export const PREVIEW_FRONT_CONFIG: Readonly<Preview3DConfig> = Object.freeze({
-  id: "front",
-  label: "Front",
-  rotateX: 0,
-  rotateY: 0,
-  rotateZ: 0,
-  translateY: 0,
-  scale: 0.9,
-  perspective: 600,
-});
 
 export interface ImageMaskConfig {
   enabled: boolean;
@@ -50,7 +39,6 @@ export const DEFAULT_MASK_CONFIG: ImageMaskConfig = {
 export interface PhotoEditorPlaceholderProps {
   className?: string;
   canvasImageUrl?: string | null;
-  /** Raw uploaded image URL (no canvas effects). Used as static reference in preview cards. */
   staticImageUrl?: string | null;
   onSelectPreview?: (config: Preview3DConfig) => void;
   selectedPreviewId?: string;

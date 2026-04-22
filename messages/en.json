@@ -477,7 +477,7 @@
         "title": "On-screen Camera",
         "description": "Overlay your webcam recording with circular crops"
       },
-       "history": {
+      "history": {
         "title": "Image History",
         "description": "Access your previous captures to reuse or edit them."
       }
@@ -785,8 +785,8 @@
   "editor": {
     "topBar": {
       "exportError": {
-        "title": "Export error",
-        "tip": "Try playing the entire video duration before exporting.",
+        "title": "Error exporting",
+        "tip": "Try playing the entire video length before exporting.",
         "close": "Close alert"
       },
       "history": {
@@ -797,26 +797,26 @@
       },
       "auth": {
         "defaultUser": "User",
-        "signIn": "Sign in",
-        "userMenu": "User menu",
+        "signIn": "Sign In",
+        "userMenu": "User Menu",
         "connectedWith": "Connected with {provider}",
         "home": "Home",
         "editor": "Editor",
-        "signOut": "Sign out",
+        "signOut": "Sign Out",
         "signingOut": "Signing out..."
       }
     },
     "export": {
       "button": "Export",
-      "title": "Export quality",
+      "title": "Export Quality",
       "recommended": "RECOMMENDED",
-      "noBackground": "no background",
+      "noBackground": "transparent",
       "solidBackground": "SOLID BACKGROUND",
       "gifNotice": "Solid black background",
       "qualities": {
         "4k": {
           "label": "4K Ultra HD",
-          "desc": "3840 × 2160 • Maximum fidelity"
+          "desc": "3840 × 2160 • Max fidelity"
         },
         "2k": {
           "label": "2K Quad HD",
@@ -828,7 +828,7 @@
         },
         "720p": {
           "label": "720p HD",
-          "desc": "1280 × 720 • Lightweight file"
+          "desc": "1280 × 720 • Small file"
         },
         "480p": {
           "label": "480p SD",
@@ -841,10 +841,29 @@
       }
     },
     "photoMode": {
-      "title": "Image editing mode",
-      "description": "Adjust the background, mockups and elements to customize your image",
+      "title": "Image Editing Mode",
+      "description": "Adjust background, mockups and elements to customize your image",
       "previewLabel": "3D Previews",
       "views": "views"
+    },
+    "imagesLibrary": {
+      "title": "My Images",
+      "project": "project",
+      "projects": "projects",
+      "loading": "Loading library...",
+      "current": "Current",
+      "delete": "Delete",
+      "confirmDelete": "Confirm?",
+      "empty": {
+        "title": "Empty library",
+        "description": "Your image projects will appear here once saved."
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{count, plural, =1 {1 minute ago} other {# minutes ago}}",
+        "hoursAgo": "{count, plural, =1 {1 hour ago} other {# hours ago}}",
+        "daysAgo": "{count, plural, =1 {1 day ago} other {# days ago}}"
+      }
     },
     "exportImage": {
       "button": "Export",
@@ -852,7 +871,7 @@
       "transparent": "Transparent",
       "recommended": "Recommended",
       "noTransparency": "No transparency",
-      "transparentInfo": "Transparent background is only preserved in PNG and WebP formats.",
+      "transparentInfo": "Transparent background is only kept in PNG and WebP formats.",
       "presets": {
         "png4x": {
           "label": "PNG 4x (Ultra)"
@@ -861,7 +880,7 @@
           "label": "PNG 2x (Retina)"
         },
         "pngOriginal": {
-          "label": "PNG Original"
+          "label": "Original PNG"
         },
         "webpHigh": {
           "label": "WebP High",
@@ -877,28 +896,83 @@
         },
         "jpegMedium": {
           "label": "JPEG Medium",
-          "description": "80% Quality — Small file size"
+          "description": "80% Quality — Reduced size"
         }
       }
     },
     "effect3d": {
-      "title": "Efecto 3D",
-      "subtitle": "Perspectiva con profundidad",
-      "intensity": "Intensidad",
-      "direction": "Dirección de perspectiva",
-      "directionHint": "Click para elegir dirección de inclinación",
-      "perspective": "Perspectiva",
-      "scale": "Escala",
-      "rotation": "Rotación 3D",
-      "clickToAdjust": "Haz clic para ajustar",
-      "rotationHint": "Usa el panel para definir los ángulos",
-      "rotateZ": "Giro (Eje Z)",
-      "verticalPosition": "Desplazamiento Vertical",
-      "reset": "Restablecer valores"
+      "title": "3D Effect",
+      "subtitle": "Perspective with depth",
+      "intensity": "Intensity",
+      "direction": "Perspective direction",
+      "directionHint": "Click to choose tilt direction",
+      "perspective": "Perspective",
+      "scale": "Scale",
+      "rotation": "3D Rotation",
+      "clickToAdjust": "Click to adjust",
+      "rotationHint": "Use panel to define angles",
+      "rotateZ": "Twist (Z Axis)",
+      "verticalPosition": "Vertical Offset",
+      "reset": "Reset values"
     },
     "cropper": {
-      "button": "Recortar imagen",
-      "tooltip": "Ajustar dimensiones y recorte"
+      "button": "Crop image",
+      "tooltip": "Adjust dimensions and crop"
+    },
+    "photoPreview": {
+      "custom": {
+        "label": "Custom",
+        "customize": "Customize",
+        "title": "3D Settings",
+        "perspective": "Perspective",
+        "scale": "Scale",
+        "rotationXY": "Rotation (X/Y)",
+        "rotationZ": "Z Rotation",
+        "vertical": "Vertical",
+        "reset": "Reset"
+      },
+      "settings": "Settings",
+      "apply3D": "Apply 3D Effect",
+      "mockup3D": "3D: Mockup",
+      "resetDefaults": "Reset Defaults",
+      "reset": "Reset",
+      "configs": {
+        "front": "Front",
+        "tilt-up": "Tilt Up",
+        "tilt-down": "Tilt Down",
+        "top-left-angle": "Top Left Angle",
+        "top-right-angle": "Top Right Angle",
+        "bottom-left-angle": "Bottom Left Angle",
+        "bottom-right-angle": "Bottom Right Angle",
+        "isometric": "Isometric"
+      }
+    },
+    "imageMask": {
+      "trigger": "Mask",
+      "tooltip": "Image mask effect",
+      "title": "Mask Effects",
+      "tabs": {
+        "presets": "Presets",
+        "custom": "Custom"
+      },
+      "presets": {
+        "none": "No Mask",
+        "fade-top": "Fade Top",
+        "fade-bottom": "Fade Bottom",
+        "fade-sides": "Fade Sides",
+        "vignette": "Vignette",
+        "angle-45": "Diagonal 45°"
+      },
+      "controls": {
+        "top": "Top",
+        "bottom": "Bottom",
+        "left": "Left",
+        "right": "Right",
+        "add": "Add",
+        "remove": "Remove",
+        "from": "From",
+        "to": "To"
+      }
     }
   },
   "playerControls": {
@@ -934,7 +1008,9 @@
       "custom": "Custom",
       "youtube": "YouTube",
       "tiktok": "TikTok",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "portrait": "Portrait",
+      "standard": "Standard"
     },
     "customSection": {
       "title": "Custom",
