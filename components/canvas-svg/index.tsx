@@ -264,17 +264,20 @@ const SVG_DATA: Record<string, SvgData> = {
     }
 };
 
+const HEX_COLOR = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
 export function getSvgDataUrl(svgId: string, color: string): string {
     const svgData = SVG_DATA[svgId];
     if (!svgData) return '';
 
+    const safeColor = HEX_COLOR.test(color) ? color : '#FFFFFF';
     const usesStroke = svgData.paths.includes('stroke-linecap') || svgData.paths.includes('stroke-linejoin');
 
     let styledPath: string;
     if (usesStroke) {
-        styledPath = svgData.paths.replace(/<path/g, `<path fill="none" stroke="${color}"`);
+        styledPath = svgData.paths.replace(/<path/g, `<path fill="none" stroke="${safeColor}"`);
     } else {
-        styledPath = svgData.paths.replace(/<(path|rect|circle)/g, `<$1 fill="${color}" stroke="${color}"`);
+        styledPath = svgData.paths.replace(/<(path|rect|circle)/g, `<$1 fill="${safeColor}" stroke="${safeColor}"`);
     }
 
     const svgString = `<svg viewBox="${svgData.viewBox}" xmlns="http://www.w3.org/2000/svg">${styledPath}</svg>`;
