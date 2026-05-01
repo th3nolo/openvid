@@ -28,7 +28,7 @@ import type { CameraConfig } from "@/types/camera.types";
 import type { Preview3DConfig, ImageMaskConfig } from "@/types/photo.types";
 import { DEFAULT_MASK_CONFIG, PREVIEW_CONFIGS } from "@/types/photo.types";
 import { MOCKUPS } from "@/lib/mockup-data";
-import { gradientToCss, generateDefaultZoomFragments, createZoomFragment, detectVideoHasAudio, ASPECT_RATIO_DIMENSIONS } from "@/types";
+import { gradientToCss, generateDefaultZoomFragments, createZoomFragment, ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { ToolsSidebar } from "@/app/components/ui/editor/ToolsSidebar";
 import { MobileToolsMenu } from "@/app/components/ui/editor/MobileToolsMenu";
 import { MobileControlPanel } from "@/app/components/ui/editor/MobileControlPanel";
@@ -1374,6 +1374,7 @@ export default function Editor() {
             masterVolume,
             videoClips: videoClips.length > 0 ? videoClips : undefined,
             videoClipBlobs: videoClips.length > 1 ? videoBlobsRef.current : undefined,
+            clipAudioStates: Object.fromEntries(clipAudioStateRef.current),
         }).finally(() => {
         });
     };
@@ -1408,13 +1409,12 @@ export default function Editor() {
         activeClipIdRef.current = null;
         activeClipDataRef.current = null;
         setVideoBlob(file);
-        detectVideoHasAudio(file).then(hasAudio => {
-            setVideoHasAudioTrack(hasAudio);
-            if (!hasAudio) setMuteOriginalAudio(true);
-            if (libraryVideo) {
-                clipAudioStateRef.current.set(libraryVideo.id, hasAudio);
-            }
-        });
+        if (libraryVideo) {
+            const originalHasAudio = libraryVideo.originalHasAudio !== false;
+            setVideoHasAudioTrack(originalHasAudio);
+            if (!originalHasAudio) setMuteOriginalAudio(true);
+            clipAudioStateRef.current.set(libraryVideo.id, libraryVideo.hasAudio !== false);
+        }
 
         try {
             await clearAllThumbnailCache();
@@ -1515,10 +1515,6 @@ export default function Editor() {
                     setVideoBlob(blob);
                     setVideoUrl(url);
                     setVideoId(videoId);
-
-                    detectVideoHasAudio(blob).then(hasAudio => {
-                        clipAudioStateRef.current.set(videoId, hasAudio);
-                    });
 
                     const video = document.createElement('video');
                     video.preload = 'metadata';
@@ -1648,13 +1644,11 @@ export default function Editor() {
     const handleVideoAudioToggle = useCallback((videoId: string, hasAudio: boolean) => {
         clipAudioStateRef.current.set(videoId, hasAudio);
 
-        if (muteOriginalAudio) return;
-
         const activeClip = activeClipDataRef.current;
         if (activeClip && activeClip.libraryVideoId === videoId && videoRef.current) {
-            videoRef.current.muted = !hasAudio;
+            videoRef.current.muted = muteOriginalAudioRef.current || !hasAudio;
         }
-    }, [muteOriginalAudio]);
+    }, []);
 
     // Handler para quitar video del track (toggle) - solo remueve el clip, no la librería
     const handleRemoveVideoFromTrack = useCallback((libraryVideoId: string) => {
@@ -1802,10 +1796,10 @@ export default function Editor() {
 
                                 videoBlobsRef.current.set(libraryVideo.id, videoBlob);
                                 videoUrlsRef.current.set(libraryVideo.id, videoToLoad.url);
-                                const hasAudio = libraryVideo.hasAudio !== false;
-                                clipAudioStateRef.current.set(libraryVideo.id, hasAudio);
-                                setVideoHasAudioTrack(hasAudio);
-                                if (!hasAudio) setMuteOriginalAudio(true);
+                                const originalHasAudio = libraryVideo.originalHasAudio !== false;
+                                clipAudioStateRef.current.set(libraryVideo.id, libraryVideo.hasAudio !== false);
+                                setVideoHasAudioTrack(originalHasAudio);
+                                if (!originalHasAudio) setMuteOriginalAudio(true);
 
                                 const newClip: VideoTrackClip = {
                                     id: crypto.randomUUID(),
