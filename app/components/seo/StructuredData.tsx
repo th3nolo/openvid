@@ -1,4 +1,5 @@
 import Script from 'next/script';
+import { headers } from 'next/headers';
 
 type WebApplicationSchema = {
   '@context': 'https://schema.org';
@@ -51,11 +52,13 @@ type StructuredDataProps = {
   data: WebApplicationSchema | OrganizationSchema | BreadcrumbSchema | Record<string, unknown>;
 };
 
-export function StructuredData({ data }: StructuredDataProps) {
+export async function StructuredData({ data }: StructuredDataProps) {
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <Script
       id={`structured-data-${data['@type']}`}
       type="application/ld+json"
+      nonce={nonce}
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
       strategy="beforeInteractive"
     />

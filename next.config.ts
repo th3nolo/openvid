@@ -3,28 +3,9 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
-// Content-Security-Policy. 'unsafe-inline' is required for Next's hydration
-// scripts and Tailwind/Framer-Motion inline styles; 'wasm-unsafe-eval' is
-// required by @ffmpeg/ffmpeg. Everything else is locked down.
-const csp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://images.unsplash.com https://pixabay.com https://cdn.pixabay.com https://images.pexels.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://static-cdn.jtvnw.net",
-  "media-src 'self' blob:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://api.github.com https://api.unsplash.com https://api.pexels.com https://pixabay.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com https://*.supabase.co wss://*.supabase.co",
-  "worker-src 'self' blob:",
-  "frame-src 'self'",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-  "upgrade-insecure-requests",
-].join('; ');
-
+// CSP is set per-request in proxy.ts so it can include a fresh per-request
+// nonce. Everything else here is static and applies to every response.
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
