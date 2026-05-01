@@ -1,5 +1,9 @@
 import { ExtendedVideoForDetection, LibraryVideo, LibraryVideoInfo } from "@/types";
 
+// Re-export so consumers (e.g. VideosMenu) can pull the type alongside the
+// helpers they import from this module without a separate @/types import.
+export type { LibraryVideoInfo };
+
 const DB_NAME = "openvid-videos-library";
 const DB_VERSION = 3;
 const STORE_NAME = "uploaded-videos";
