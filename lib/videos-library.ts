@@ -31,10 +31,7 @@ export interface LibraryVideoInfo {
     originalHasAudio?: boolean;
 }
 
-interface ExtendedVideoElement extends HTMLVideoElement {
-    audioTracks?: { length: number };
-    mozHasAudio?: boolean;
-}
+import { detectVideoHasAudio } from "./audio-detection";
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -137,52 +134,6 @@ async function getVideoMetadata(file: File): Promise<{
         };
 
         video.src = URL.createObjectURL(file);
-    });
-}
-
-async function detectVideoHasAudio(blob: Blob): Promise<boolean> {
-    return new Promise((resolve) => {
-        const url = URL.createObjectURL(blob);
-        const video = document.createElement("video");
-        video.muted = true;
-        video.preload = "auto";
-        let settled = false;
-
-        const cleanup = (result: boolean) => {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timeoutId);
-            URL.revokeObjectURL(url);
-            video.src = "";
-            resolve(result);
-        };
-
-        const timeoutId = setTimeout(() => cleanup(false), 8000);
-
-        const checkAudio = (afterData: boolean) => {
-            const v = video as ExtendedVideoElement & { webkitAudioDecodedByteCount?: number };
-
-            if (afterData && typeof v.webkitAudioDecodedByteCount === "number") {
-                return cleanup(v.webkitAudioDecodedByteCount > 0);
-            }
-
-            if (v.audioTracks !== undefined && v.audioTracks.length > 0) {
-                return cleanup(true);
-            }
-
-            if (v.mozHasAudio !== undefined) {
-                return cleanup(Boolean(v.mozHasAudio));
-            }
-
-            if (!afterData) return;
-
-            cleanup(false);
-        };
-
-        video.addEventListener("loadedmetadata", () => checkAudio(false));
-        video.addEventListener("loadeddata", () => checkAudio(true));
-        video.addEventListener("error", () => cleanup(false));
-        video.src = url;
     });
 }
 
