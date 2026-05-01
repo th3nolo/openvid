@@ -726,18 +726,33 @@ async function exportWithMediabunnyAndAudio(
                     const originalVideoData = new Uint8Array(await sourceBlob!.arrayBuffer());
                     await ffmpeg.writeFile("original.mp4", originalVideoData);
 
-                    // Verificar si el video tiene stream de audio
-                    // Probamos extrayendo audio — si falla, no tiene audio
+                    // Verificar si el video tiene stream de audio.
+                    // ffmpeg.wasm no siempre lanza una excepción cuando el
+                    // exec termina con código distinto de cero, así que
+                    // extraemos a un archivo y comprobamos que se haya
+                    // creado con contenido. El "?" en `-map 0:a:0?` hace
+                    // que el mapeo sea opcional cuando no hay pista de
+                    // audio, evitando falsos negativos por excepciones.
+                    const probeFile = "audio-probe.m4a";
                     try {
                         await ffmpeg.exec([
                             "-i", "original.mp4",
-                            "-vn", "-t", "0.1",
-                            "-f", "null", "-"
+                            "-map", "0:a:0?",
+                            "-c:a", "copy",
+                            "-t", "0.1",
+                            "-y", probeFile,
                         ]);
-                        hasSourceAudio = true;
+                        try {
+                            const probeData = await ffmpeg.readFile(probeFile) as Uint8Array;
+                            hasSourceAudio = probeData.byteLength > 0;
+                        } catch {
+                            hasSourceAudio = false;
+                        }
                     } catch {
-                        // No tiene stream de audio
                         hasSourceAudio = false;
+                    }
+                    await ffmpeg.deleteFile(probeFile).catch(() => { });
+                    if (!hasSourceAudio) {
                         await ffmpeg.deleteFile("original.mp4").catch(() => { });
                     }
                 } catch (e) {
