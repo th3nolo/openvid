@@ -4,11 +4,12 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  
-  const origin = host ? `${protocol}://${host}` : requestUrl.origin;
+
+  // Pin the redirect origin to a server-configured value. Building it from
+  // the Host / X-Forwarded-Host header lets a caller behind an untrusted
+  // proxy (or any deployment without one) point the OAuth redirect at an
+  // attacker-controlled domain after the code exchange completes.
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? requestUrl.origin;
 
   if (code) {
     const supabase = await createClient();
