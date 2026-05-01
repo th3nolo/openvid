@@ -133,7 +133,10 @@ export default function Editor() {
     // Custom background images
     const [uploadedImages, setUploadedImages] = useState<string[]>(() => {
         if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem("openvid-uploaded-images");
+            // Distinct from STORAGE_KEY ("openvid-uploaded-images") in
+            // types/canvas-elements.types.ts — that one stores UploadedImage[]
+            // for the elements-menu, this one is the background-image list.
+            const stored = localStorage.getItem("openvid-uploaded-backgrounds");
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
@@ -1869,7 +1872,7 @@ export default function Editor() {
 
     useEffect(() => {
         if (uploadedImages.length > 0) {
-            localStorage.setItem("openvid-uploaded-images", JSON.stringify(uploadedImages));
+            localStorage.setItem("openvid-uploaded-backgrounds", JSON.stringify(uploadedImages));
         }
     }, [uploadedImages]);
 
