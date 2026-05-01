@@ -17,8 +17,13 @@ export default async function proxy(request: NextRequest) {
   intlResponse.headers.set('x-user-country', country);
 
   const supabaseResponse = await updateSession(request);
+  // Preserve full cookie options (httpOnly/secure/sameSite/maxAge/path) when
+  // forwarding Supabase's auth cookies onto the next-intl response. Passing
+  // only name/value drops every flag, which can downgrade `secure`, drop
+  // `sameSite`, and turn the refresh-token cookie into a session cookie —
+  // logging users out on browser close after any silent token refresh.
   supabaseResponse.cookies.getAll().forEach((cookie) => {
-    intlResponse.cookies.set(cookie.name, cookie.value);
+    intlResponse.cookies.set(cookie);
   });
 
   return intlResponse;
