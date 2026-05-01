@@ -155,6 +155,11 @@ pnpm install
 cp .env.example .env
 # Add your Supabase credentials
 
+# Apply the Supabase schema + RLS policies (one-time, in your Supabase project)
+# Open supabase-setup.example.sql and run it in the Supabase SQL editor.
+# This creates user_profiles, enables row-level security, and wires the
+# new-user trigger. Without it the auth flow has no profile to read.
+
 # Start development server
 pnpm dev
 ```
