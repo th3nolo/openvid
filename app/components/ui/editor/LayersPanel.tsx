@@ -30,6 +30,8 @@ export function LayersPanel({
     onVideoLayerSelect,
     isVideoLayerSelected = false,
     mediaType = "video",
+    hoveredElementId = null,
+    onHoverElement,
 }: LayersPanelProps) {
     const t = useTranslations("editor")
     const [isOpen, setIsOpen] = useState(true);
@@ -445,6 +447,7 @@ export function LayersPanel({
                     <Icon
                         icon={TYPE_ICON.video}
                         className={`size-3.5 shrink-0 ${isSelected ? "text-[#00A3FF]" : "text-neutral-500"}`}
+                        aria-hidden="true"
                     />
                     <span className="flex-1 text-[11px] truncate">
                         {mediaType === "video" ? t("layerPanel.videoLayer") : t("layerPanel.imageLayer")}
@@ -489,6 +492,16 @@ export function LayersPanel({
                         }
                         setCtxMenu({ x: e.clientX, y: e.clientY, id });
                     }}
+                    onMouseEnter={() => {
+                        if (!pointerDragRef.current?.active && onHoverElement) {
+                            onHoverElement(id);
+                        }
+                    }}
+                    onMouseLeave={() => {
+                        if (onHoverElement && hoveredElementId === id) {
+                            onHoverElement(null);
+                        }
+                    }}
                     data-layer-row={id}
                     className={[
                         "group relative flex items-center gap-1.5 h-7 rounded-md cursor-pointer select-none transition-all duration-100",
@@ -526,10 +539,12 @@ export function LayersPanel({
                                     onToggleVisible(id, !isVisible);
                                 }}
                                 className="flex items-center justify-center w-5 h-5 rounded hover:bg-white/10"
+                                aria-label={isVisible ? t("layerPanel.tooltips.hide") : t("layerPanel.tooltips.show")}
                             >
                                 <Icon
                                     icon={isVisible ? "solar:eye-bold" : "solar:eye-closed-bold"}
                                     className="size-3"
+                                    aria-hidden="true"
                                 />
                             </button>
                         </TooltipAction>
@@ -541,10 +556,12 @@ export function LayersPanel({
                                     onToggleLock(id, !isLocked);
                                 }}
                                 className="flex items-center justify-center w-5 h-5 rounded hover:bg-white/10"
+                                aria-label={isLocked ? t("layerPanel.tooltips.unlock") : t("layerPanel.tooltips.lock")}
                             >
                                 <Icon
                                     icon={isLocked ? "gravity-ui:lock-fill" : "icon-park-solid:unlock"}
                                     className="size-3"
+                                    aria-hidden="true"
                                 />
                             </button>
                         </TooltipAction>
@@ -557,8 +574,9 @@ export function LayersPanel({
                                     setSelectedIds((p) => p.filter((x) => x !== id));
                                 }}
                                 className="flex items-center justify-center w-5 h-5 rounded hover:bg-red-500/20"
+                                aria-label={t("layerPanel.tooltips.delete")}
                             >
-                                <Icon icon="solar:trash-bin-trash-bold" className="size-3 hover:text-red-400" />
+                                <Icon icon="solar:trash-bin-trash-bold" className="size-3 hover:text-red-400" aria-hidden="true" />
                             </button>
                         </TooltipAction>
                     </div>
@@ -566,12 +584,14 @@ export function LayersPanel({
                         <Icon
                             icon="solar:eye-closed-bold"
                             className="size-3 text-neutral-500 shrink-0 group-hover:hidden"
+                            aria-hidden="true"
                         />
                     )}
                     {isLocked && (
                         <Icon
                             icon="solar:lock-bold"
                             className="size-3 text-neutral-500 shrink-0 group-hover:hidden"
+                            aria-hidden="true"
                         />
                     )}
                 </div>
@@ -587,6 +607,8 @@ export function LayersPanel({
             onToggleVisible,
             onToggleLock,
             onDelete,
+            onHoverElement,
+            hoveredElementId,
             t
         ]
     );
