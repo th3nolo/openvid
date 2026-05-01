@@ -36,10 +36,15 @@ export const updateSession = async (request: NextRequest) => {
   
   const pathname = request.nextUrl.pathname;
 
-  // if (!user && request.nextUrl.pathname.startsWith("/editor")) {
+  // /editor is intentionally accessible to anonymous users — every editor
+  // feature today runs client-side (IndexedDB, localStorage, blob URLs) and
+  // there are no authenticated cloud features. If/when cloud persistence is
+  // added, restore this redirect (and update the path test for the locale
+  // prefix, e.g. /^\/(es|en)\/editor/) to gate access.
+  // if (!user && /^\/(es|en)\/editor(\/|$)/.test(pathname)) {
   //   const url = request.nextUrl.clone();
-  //   url.pathname = "/login";
-  //   url.searchParams.set("redirectedFrom", request.nextUrl.pathname);
+  //   url.pathname = pathname.replace(/\/editor.*$/, "/login");
+  //   url.searchParams.set("redirectedFrom", pathname);
   //   return NextResponse.redirect(url);
   // }
 
