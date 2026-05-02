@@ -63,6 +63,12 @@ export default async function proxy(request: NextRequest) {
 
   if (isLocaleRedirect) {
     intlResponse.headers.set('Content-Security-Policy', csp);
+    if (isHttps) {
+      intlResponse.headers.set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+      );
+    }
     return intlResponse;
   }
 
@@ -70,6 +76,15 @@ export default async function proxy(request: NextRequest) {
   // headers so downstream pages see x-nonce / x-user-country.
   const finalResponse = NextResponse.next({ request: { headers: requestHeaders } });
   finalResponse.headers.set('Content-Security-Policy', csp);
+  // HSTS only on HTTPS — sending it on http://localhost would persist in the
+  // browser HSTS cache for two years and force every future localhost:*
+  // request to HTTPS, breaking dev across ports.
+  if (isHttps) {
+    finalResponse.headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload'
+    );
+  }
 
   // Forward any non-internal headers next-intl set (Vary, link/hreflang, …).
   intlResponse.headers.forEach((value, key) => {
