@@ -74,8 +74,8 @@ export default function Header() {
       >
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group" aria-label="OpenVid - Go to home">
-            <Image src="/svg/logo-openvid.svg" alt="" aria-hidden="true" width={50} height={50} style={{ height: "auto" }} />
-            <Image src="/svg/openvid.svg" alt="OpenVid" width={100} height={50} className="hidden sm:flex" style={{ height: "auto" }} />
+            <Image src="/svg/logo-openvid.svg" alt="" aria-hidden="true" width={50} height={49} />
+            <Image src="/svg/openvid.svg" alt="OpenVid" width={100} height={31} className="hidden sm:flex" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-md font-medium text-neutral-400" aria-label="Main navigation">

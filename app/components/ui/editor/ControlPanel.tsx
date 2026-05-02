@@ -142,7 +142,7 @@ export function ControlPanel({
                     aria-label="OpenVid home"
                 >
                     <Image src="/svg/logo-openvid.svg" alt="" width={30} height={30} />
-                    <Image src="/svg/openvid.svg" alt="OpenVid" width={70} height={50} />
+                    <Image src="/svg/openvid.svg" alt="OpenVid" width={70} height={21} />
                 </Link>
 
                 <TooltipAction label={t("header.close")} side="right">

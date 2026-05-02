@@ -21,7 +21,7 @@ export default function NotFound() {
 
         <div className="-mt-8 space-y-3 animate-reveal opacity-0 [animation-delay:300ms] relative z-10">
           <div className="flex justify-center mb-4 opacity-50">
-            <Image src="/svg/openvid.svg" alt="Openvid" width={120} height={30} />
+            <Image src="/svg/openvid.svg" alt="Openvid" width={120} height={37} />
           </div>
 
           <h2 className="text-2xl md:text-4xl font-bold text-white tracking-tight">

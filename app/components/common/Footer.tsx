@@ -15,8 +15,8 @@ export default function Footer() {
         <div className="w-full md:w-1/3">
           <div className="flex items-center gap-2 mb-4">
             <Link href="/" className="flex items-center gap-2 group" aria-label="OpenVid - Go to home">
-              <Image src="/svg/logo-openvid.svg" alt="" width={50} height={50} aria-hidden="true" />
-              <Image src="/svg/openvid.svg" alt="OpenVid" width={100} height={50} />
+              <Image src="/svg/logo-openvid.svg" alt="" width={50} height={49} aria-hidden="true" />
+              <Image src="/svg/openvid.svg" alt="OpenVid" width={100} height={31} />
             </Link>
           </div>
           <p className="text-neutral-500 text-sm leading-relaxed">

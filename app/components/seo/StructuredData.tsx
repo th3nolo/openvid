@@ -1,4 +1,4 @@
-import Script from 'next/script';
+import { StructuredDataScript } from "./StructuredDataScript";
 
 type WebApplicationSchema = {
   '@context': 'https://schema.org';
@@ -52,19 +52,9 @@ type StructuredDataProps = {
 };
 
 export function StructuredData({ data }: StructuredDataProps) {
-  // Don't pass `nonce` manually here. Next.js auto-applies the nonce from
-  // the request CSP header to all rendered <script> tags (including this
-  // ld+json one). Manually setting nonce={...} causes a hydration mismatch
-  // because Chromium strips the nonce attribute from the DOM after load
-  // (security feature) — server vDOM has the nonce, client DOM doesn't.
-  return (
-    <Script
-      id={`structured-data-${data['@type']}`}
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-      strategy="beforeInteractive"
-    />
-  );
+  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+
+  return <StructuredDataScript id={`structured-data-${data['@type']}`} json={json} />;
 }
 
 export function generateWebAppSchema(locale: 'es' | 'en'): WebApplicationSchema {
