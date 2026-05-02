@@ -1,4 +1,3 @@
-import { updateSession } from "@/utils/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './i18n';
@@ -19,10 +18,10 @@ const buildCsp = (nonce: string, isHttps: boolean) => {
     // Tailwind v4 + Framer-Motion still emit inline style attributes; CSS-only
     // nonces aren't worth the regression risk for the protection they add.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://images.unsplash.com https://pixabay.com https://cdn.pixabay.com https://images.pexels.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://static-cdn.jtvnw.net",
+    "img-src 'self' data: blob: https://images.unsplash.com https://pixabay.com https://cdn.pixabay.com https://images.pexels.com",
     "media-src 'self' blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.github.com https://api.unsplash.com https://api.pexels.com https://pixabay.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com https://*.supabase.co wss://*.supabase.co",
+    "connect-src 'self' https://api.github.com https://api.unsplash.com https://api.pexels.com https://pixabay.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
     "worker-src 'self' blob:",
     "frame-src 'none'",
     "frame-ancestors 'none'",
@@ -58,18 +57,8 @@ export default async function proxy(request: NextRequest) {
   const intlResponse = intlMiddleware(request);
   const isLocaleRedirect = intlResponse.status >= 300 && intlResponse.status < 400;
 
-  // Pull supabase auth-cookie updates regardless so silent token refresh isn't lost.
-  const supabaseResponse = await updateSession(request);
-  const isAuthRedirect = supabaseResponse.status >= 300 && supabaseResponse.status < 400;
-
-  if (isAuthRedirect) {
-    supabaseResponse.headers.set('Content-Security-Policy', csp);
-    return supabaseResponse;
-  }
-
   if (isLocaleRedirect) {
     intlResponse.headers.set('Content-Security-Policy', csp);
-    supabaseResponse.cookies.getAll().forEach((c) => intlResponse.cookies.set(c));
     return intlResponse;
   }
 
@@ -86,11 +75,8 @@ export default async function proxy(request: NextRequest) {
     finalResponse.headers.set(key, value);
   });
 
-  // Carry over locale + auth cookies. Auth cookies must keep their full
-  // ResponseCookie options (httpOnly/secure/sameSite/maxAge/path) — passing
-  // only name+value drops every flag and downgrades cookie security.
+  // Carry over locale cookies (NEXT_LOCALE).
   intlResponse.cookies.getAll().forEach((c) => finalResponse.cookies.set(c));
-  supabaseResponse.cookies.getAll().forEach((c) => finalResponse.cookies.set(c));
 
   return finalResponse;
 }

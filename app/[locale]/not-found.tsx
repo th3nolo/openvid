@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { AuthProvider } from "@/hooks/useAuth";
 import { Link } from "@/navigation";
 import Footer from "../components/common/Footer";
 import Header from "../components/common/Header";
@@ -9,9 +8,9 @@ import Image from "next/image";
 
 export default function NotFound() {
   const t = useTranslations('notFound');
-  
+
   return (
-    <AuthProvider>
+    <>
       <Header />
 
       <div className="flex flex-col items-center justify-center min-h-dvh bg-[#050505] text-center px-6 relative overflow-hidden">
@@ -44,6 +43,6 @@ export default function NotFound() {
 
       </div>
       <Footer/>
-    </AuthProvider>
+    </>
   );
 }

@@ -5,7 +5,6 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 
 [![oosmetrics](https://api.oosmetrics.com/api/v1/badge/achievement/0035870f-b4f4-4b12-9a1c-bef97b6785af.svg)](https://oosmetrics.com/repo/CristianOlivera1/openvid)
 
@@ -109,22 +108,6 @@ Add context to your demo with professional frames:
 
 ---
 
-## Authentication
-
-Powered by **Supabase Auth** with OAuth support:
-
-<div align="center">
-
-| Provider | Status |
-|:--------:|:------:|
-| Google   | ✅ Supported |
-| GitHub   | ✅ Supported |
-| Twitch   | ✅ Supported |
-
-</div>
-
----
-
 ## Technology
 
 **Video Processing**
@@ -137,7 +120,6 @@ Powered by **Supabase Auth** with OAuth support:
 **Storage**
 - IndexedDB - locally recorded videos
 - LocalStorage - user settings
-- Supabase Storage - cloud backups (coming soon)
 
 **UI/UX**
 - Radix UI - accessible components
@@ -153,12 +135,7 @@ pnpm install
 
 # Setup environment
 cp .env.example .env
-# Add your Supabase credentials
-
-# Apply the Supabase schema + RLS policies (one-time, in your Supabase project)
-# Open supabase-setup.example.sql and run it in the Supabase SQL editor.
-# This creates user_profiles, enables row-level security, and wires the
-# new-user trigger. Without it the auth flow has no profile to read.
+# Optional: photo provider API keys (Unsplash / Pexels / Pixabay)
 
 # Start development server
 pnpm dev
