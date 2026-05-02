@@ -9,12 +9,16 @@ const intlMiddleware = createIntlMiddleware({
   localeDetection: true
 });
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const buildCsp = (nonce: string, isHttps: boolean) => {
   const directives = [
     "default-src 'self'",
     // 'strict-dynamic' lets the nonce'd Next bootstrap chain in /_next/static
     // chunks; 'wasm-unsafe-eval' is required by @ffmpeg/ffmpeg for the editor.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'`,
+    // 'unsafe-eval' is required by React in development for reconstructing
+    // call stacks; production React never uses eval().
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''}`,
     // Tailwind v4 + Framer-Motion still emit inline style attributes; CSS-only
     // nonces aren't worth the regression risk for the protection they add.
     "style-src 'self' 'unsafe-inline'",
